@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0380C6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gepszer">
+<title>Gepszer - Anyagkezeles</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:#EDEDEA}
+.header{background:#0380C6;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.header-logo{height:36px;object-fit:contain;background:#fff;border-radius:4px;padding:3px 8px}
+.header-title{color:#fff;font-size:15px;font-weight:700;text-align:right;line-height:1.2}
+.header-sub{color:rgba(255,255,255,0.8);font-size:11px;font-weight:400}
+.page{display:none;min-height:calc(100vh - 64px);padding:20px 16px}
+.page.active{display:block}
+.home-welcome{text-align:center;padding:28px 0 32px}
+.home-welcome h2{font-size:24px;color:#1a1a1a;font-weight:700;margin-bottom:8px}
+.home-welcome p{font-size:17px;color:#555;line-height:1.5}
+.main-btn{display:flex;align-items:center;gap:18px;width:100%;padding:24px 20px;border-radius:16px;border:none;cursor:pointer;margin-bottom:18px;text-align:left}
+.main-btn-icon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:30px}
+.main-btn-text h3{font-size:21px;font-weight:700;margin-bottom:5px}
+.main-btn-text p{font-size:15px;opacity:0.8;line-height:1.4}
+.btn-atvetel{background:#0380C6;color:#fff;box-shadow:0 4px 16px rgba(3,128,198,0.35)}
+.btn-atvetel .main-btn-icon{background:rgba(255,255,255,0.2)}
+.btn-atbelyeges{background:#2C2C2C;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
+.btn-atbelyeges .main-btn-icon{background:rgba(255,255,255,0.15)}
+.home-info{background:#fff;border-radius:12px;padding:16px;border-left:4px solid #0380C6;margin-top:8px}
+.home-info p{font-size:15px;color:#555;line-height:1.6}
+.home-info strong{color:#0380C6}
+.back-btn{display:flex;align-items:center;gap:8px;background:none;border:none;color:#0380C6;font-size:18px;font-weight:700;cursor:pointer;padding:0 0 20px}
+.back-arrow{font-size:24px;line-height:1}
+.section-header{background:#0380C6;color:#fff;border-radius:12px;padding:18px;margin-bottom:20px}
+.section-header h2{font-size:21px;font-weight:700;margin-bottom:3px}
+.section-header p{font-size:14px;opacity:0.85}
+.card{background:#fff;border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid #dde3e8}
+.card-title{font-size:12px;font-weight:700;color:#0380C6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e8f0f8}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-size:15px;font-weight:700;color:#333;margin-bottom:6px}
+input,select,textarea{width:100%;font-size:18px;padding:13px 14px;border:2px solid #ccd3db;border-radius:10px;background:#fafbfc;color:#1a1a1a;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0380C6;background:#fff}
+textarea{resize:vertical;min-height:64px}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+.row2 .field.narrow{flex:0 0 95px}
+.search-box{background:#fff;border-radius:12px;padding:18px;margin-bottom:16px;border:2px solid #0380C6}
+.search-title{font-size:15px;font-weight:700;color:#0380C6;margin-bottom:14px}
+.btn-search{width:100%;padding:15px;font-size:18px;font-weight:700;border-radius:10px;border:none;background:#0380C6;color:#fff;cursor:pointer;margin-top:6px}
+.btn-search:active{background:#0268a8}
+.result-item{background:#fff;border-radius:10px;padding:18px;margin-bottom:12px;border:2px solid #e0e8f0;cursor:pointer}
+.result-item:active{border-color:#0380C6;background:#f0f7fd}
+.result-item h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:5px}
+.result-item p{font-size:15px;color:#555;line-height:1.6}
+.result-badge{display:inline-block;background:#e8f3fb;color:#0380C6;font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;margin-bottom:8px}
+.check-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.check-opt{display:flex;align-items:center;justify-content:center;gap:6px;font-size:16px;font-weight:600;background:#fff;border:2px solid #ccd3db;border-radius:10px;padding:12px 14px;cursor:pointer;flex:1;min-width:0;transition:all 0.15s}
+.check-opt input[type=radio]{display:none}
+.check-opt.ok:hover,.check-opt.selected-ok{border-color:#27ae60;background:#e8f5e9;color:#1a5e2a}
+.check-opt.nok:hover,.check-opt.selected-nok{border-color:#c0392b;background:#fdecea;color:#7b1a1a}
+.check-opt.warn:hover,.check-opt.selected-warn{border-color:#e67e22;background:#fef9f0;color:#7a4000}
+.subsection{font-size:12px;font-weight:700;color:#0380C6;text-transform:uppercase;letter-spacing:0.07em;margin:16px 0 8px;padding-top:14px;border-top:1px solid #e0e8f0}
+.anyag-card{background:#f4f7fb;border:2px solid #c8d8e8;border-radius:10px;padding:16px;margin-bottom:14px;position:relative}
+.anyag-card-title{font-size:13px;font-weight:700;color:#0380C6;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em}
+.del-btn{position:absolute;top:14px;right:14px;background:none;border:none;color:#c0392b;font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
+.btn-add{width:100%;padding:14px;font-size:17px;font-weight:700;border-radius:10px;border:2px dashed #0380C6;background:transparent;color:#0380C6;cursor:pointer;margin-bottom:6px}
+.btn-add:active{background:#e8f3fb}
+.min-row{display:flex;gap:10px;margin-top:6px}
+.min-btn{flex:1;padding:15px;border-radius:10px;border:2px solid #ccd3db;background:#fff;font-size:17px;font-weight:700;cursor:pointer;color:#555}
+.min-btn.selected-megfelelt{border-color:#27ae60;background:#e8f5e9;color:#1a5e2a}
+.min-btn.selected-nem{border-color:#c0392b;background:#fdecea;color:#7b1a1a}
+.btn-send{width:100%;padding:17px;font-size:19px;font-weight:700;border-radius:12px;border:none;background:#0380C6;color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(3,128,198,0.3)}
+.btn-send:active{background:#0268a8}
+.btn-send:disabled{opacity:0.5;cursor:not-allowed}
+.btn-stamp{width:100%;padding:17px;font-size:19px;font-weight:700;border-radius:12px;border:none;background:#2C2C2C;color:#fff;cursor:pointer}
+.btn-stamp:active{background:#444}
+.result-box{display:none;background:#e8f5e9;border:2px solid #a5d6a7;border-radius:12px;padding:22px;margin-top:16px;text-align:center}
+.result-avizo{font-size:30px;font-weight:700;color:#2e7d32;letter-spacing:0.06em;margin:8px 0;word-break:break-all}
+.result-label{font-size:15px;color:#555}
+.result-info{font-size:14px;color:#666;margin-top:6px}
+.pdf-btn{display:none;margin-top:14px;padding:13px 24px;background:#0380C6;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px}
+.error-box{display:none;background:#fdecea;border:2px solid #f5c6c6;border-radius:12px;padding:16px;margin-top:12px;font-size:16px;color:#c62828;font-weight:600}
+.spinner{display:none;text-align:center;padding:16px;font-size:16px;color:#888;font-weight:600}
+.stamp-item{background:#fff;border-radius:10px;padding:18px;margin-bottom:12px;border:2px solid #e0e8f0}
+.stamp-item h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:8px}
+.stamp-item p{font-size:15px;color:#555;line-height:1.7;margin-bottom:2px}
+.stamp-history{margin-top:10px;padding-top:10px;border-top:1px solid #eee}
+.stamp-badge{display:inline-block;background:#f0f0e8;color:#555;font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;margin:2px}
+.footer{text-align:center;padding:24px 16px;font-size:13px;color:#999;border-top:1px solid #ddd;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img class="header-logo" src="data:image/jpeg;base64,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" alt="Gepszer">
+  <div class="header-title">
+    Anyagkezeles
+    <div class="header-sub">Trade Kontakt Üzem</div>
+  </div>
+</div>
+
+<!-- NYITOLAP -->
+<div class="page active" id="page-home">
+  <div class="home-welcome">
+    <h2>Üdvözöljük!</h2>
+    <p>Válasszon műveletet az alábbiakból</p>
+  </div>
+  <button class="main-btn btn-atvetel" onclick="navigate('page-atvetel-search')">
+    <div class="main-btn-icon">&#128230;</div>
+    <div class="main-btn-text">
+      <h3>Anyag átvétel</h3>
+      <p>Beérkező anyag rögzítése és ellenőrzése</p>
+    </div>
+  </button>
+  <button class="main-btn btn-atbelyeges" onclick="navigate('page-stamp-search')">
+    <div class="main-btn-icon">&#127991;</div>
+    <div class="main-btn-text">
+      <h3>Átbélyegzés</h3>
+      <p>Maradék anyag nyilvántartásba vétele</p>
+    </div>
+  </button>
+  <div class="home-info">
+    <p><strong>EN 1090 EXC3</strong> megfelelőségi rendszer<br>Gépszer Kft. | Trade Kontakt Üzem</p>
+  </div>
+</div>
+
+<!-- ATVETEL KERESES -->
+<div class="page" id="page-atvetel-search">
+  <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header">
+    <h2>&#128230; Anyag átvétel</h2>
+    <p>Adja meg a keresési feltételeket</p>
+  </div>
+  <div class="search-box">
+    <div class="search-title">&#128269; Keresés</div>
+    <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. MR-2026-0441"></div>
+    <div class="field"><label>Szállító neve</label><input type="text" id="s_szallito" placeholder="pl. Ferromet Kft."></div>
+    <div class="field"><label>Munkaszám</label><input type="text" id="s_munkaszam" placeholder="pl. 31-501-26"></div>
+    <div class="field"><label>Szállítás ideje (év/hónap)</label><input type="month" id="s_datum"></div>
+    <button class="btn-search" onclick="keresesAtvetel()">Keresés indítása</button>
+  </div>
+  <div id="atvetel-results"></div>
+</div>
+
+<!-- ATVETEL URLAP -->
+<div class="page" id="page-atvetel-form">
+  <button class="back-btn" onclick="navigate('page-atvetel-search')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header">
+    <h2>&#128230; Átvétel rögzítése</h2>
+    <p>Ellenőrizze és szükség esetén módosítsa az adatokat</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Szállítmány fejléce</div>
+    <div class="field"><label>Beérkezés dátuma</label><input type="date" id="datum"></div>
+    <div class="field"><label>Megrendelési szám</label><input type="text" id="rendeles_szam" placeholder="pl. MR-2026-0441"></div>
+    <div class="field"><label>Szállító neve</label><input type="text" id="szallito" placeholder="pl. Ferromet Kft."></div>
+    <div class="field"><label>Szállítólevél szám</label><input type="text" id="szallitolevel_szam" placeholder="pl. SL-2026-0441"></div>
+    <div class="field"><label>Átvevő neve</label>
+      <select id="atvevo">
+        <option value="">— válassz —</option>
+        <option>Kriszt Antal</option>
+        <option>Horváth Balázs</option>
+        <option>Geiszler István</option>
+        <option>Hüse Stefan</option>
+        <option>Sütő Szabolcs</option>
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Anyagtételek</div>
+    <div id="anyag-container"></div>
+    <button class="btn-add" onclick="ujAnyagsor()">+ Új anyagtétel hozzáadása</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Minosites</div>
+    <div class="field"><label>Összesített eredmény</label>
+      <div class="min-row">
+        <button class="min-btn" id="btn-megfelelt" onclick="minosit('MEGFELELT')">&#10003; MEGFELELT</button>
+        <button class="min-btn" id="btn-nem" onclick="minosit('NEM FELELT MEG')">&#10007; NEM FELELT MEG</button>
+      </div>
+      <input type="hidden" id="minosites" value="">
+    </div>
+    <div class="field" id="ncr-mezo" style="display:none">
+      <label>NCR azonosító szám</label>
+      <input type="text" id="ncr_szam" placeholder="pl. NCR-2604-001">
+    </div>
+  </div>
+  <button class="btn-send" id="btn-send" onclick="kuldes()">Rögzítés és AVIZÓ szám generálása</button>
+  <div class="spinner" id="spinner">&#9203; Küldés folyamatban...</div>
+  <div class="result-box" id="result">
+    <div class="result-label">Generált AVIZÓ szám</div>
+    <div class="result-avizo" id="avizo-ertek">-</div>
+    <div class="result-info" id="result-info"></div>
+    <a class="pdf-btn" id="pdf-link" href="#" target="_blank">&#128196; PDF megnyitása</a>
+  </div>
+  <div class="error-box" id="error"></div>
+</div>
+
+<!-- ATBELYEGES KERESES -->
+<div class="page" id="page-stamp-search">
+  <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header">
+    <h2>&#127991; Átbélyegzés</h2>
+    <p>Keresse meg az átbélyegzendő anyagot</p>
+  </div>
+  <div class="search-box">
+    <div class="search-title">&#128269; Keresés</div>
+    <div class="field"><label>Munkaszám</label><input type="text" id="st_munkaszam" placeholder="pl. 31-501-26"></div>
+    <div class="field"><label>Anyagminőség</label><input type="text" id="st_minoseg" placeholder="pl. S355J2+N"></div>
+    <div class="field"><label>Anyag méret</label><input type="text" id="st_meret" placeholder="pl. 1000x1500x10"></div>
+    <div class="field"><label>Anyag megnevezése</label><input type="text" id="st_megnevezes" placeholder="pl. lemez"></div>
+    <div class="field"><label>Szállítás dátuma (év/hónap)</label><input type="month" id="st_datum"></div>
+    <button class="btn-search" onclick="keresesStamp()">Keresés indítása</button>
+  </div>
+  <div id="stamp-results"></div>
+</div>
+
+<!-- ATBELYEGES RESZLETEK -->
+<div class="page" id="page-stamp-detail">
+  <button class="back-btn" onclick="navigate('page-stamp-search')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header">
+    <h2>&#127991; Átbélyegzés vegrehajtasa</h2>
+    <p>Adja meg a maradék anyag adatait</p>
+  </div>
+  <div class="card" id="stamp-original-card">
+    <div class="card-title">Eredeti anyag adatai</div>
+    <div id="stamp-original-data"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Maradék anyag adatai</div>
+    <div class="field"><label>Maradék méret</label><input type="text" id="maradek_meret" placeholder="pl. 500x1500x10"></div>
+    <div class="row2">
+      <div class="field"><label>Mennyiség</label><input type="number" id="maradek_menny" placeholder="1"></div>
+      <div class="field narrow"><label>Egyseg</label>
+        <select id="maradek_egyseg"><option>db</option><option>kg</option><option>fm</option><option>m2</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Megjegyzés (opcionális)</label><textarea id="maradek_megj" placeholder="pl. vágási maradék..."></textarea></div>
+  </div>
+  <button class="btn-stamp" onclick="atbelyeges()">&#127991; Átbélyegzés végrehajtása</button>
+  <div class="spinner" id="stamp-spinner">&#9203; Feldolgozás...</div>
+  <div class="result-box" id="stamp-result">
+    <div class="result-label">Új maradék anyag azonosító</div>
+    <div class="result-avizo" id="stamp-avizo">-</div>
+    <div class="result-info" id="stamp-info"></div>
+  </div>
+  <div class="error-box" id="stamp-error"></div>
+</div>
+
+<div class="footer">Gépszer Kft. | Trade Kontakt Üzem | EN 1090 EXC3</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr78o_6tlUcPvhi6B0nWn7N-G8zn7i8OzjR7YExsA_tuGTDCCguDqux7AgDjEkDDiW/exec";
+let sorSzamlalo = 0;
+let minoSzam = "";
+let kivalasztottStamp = null;
+
+function navigate(pageId) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(pageId).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const d = document.getElementById("datum");
+  if (d) d.value = new Date().toISOString().slice(0,10);
+  ujAnyagsor();
+});
+
+function keresesAtvetel() {
+  const rendeles = document.getElementById("s_rendeles").value.trim();
+  const szallito = document.getElementById("s_szallito").value.trim();
+  const munkaszam = document.getElementById("s_munkaszam").value.trim();
+  const datum = document.getElementById("s_datum").value;
+  if (!rendeles && !szallito && !munkaszam && !datum) { alert("Adjon meg legalabb egy keresesi feltételt!"); return; }
+  const container = document.getElementById("atvetel-results");
+  container.innerHTML = '<div class="spinner" style="display:block">&#9203; Kereses...</div>';
+  const params = new URLSearchParams({action:"search", rendeles, szallito, munkaszam, datum});
+  fetch(SCRIPT_URL + "?" + params.toString(), {method:"GET", redirect:"follow"})
+    .then(r => r.json())
+    .then(res => {
+      container.innerHTML = "";
+      if (!res.ok || !res.adatok || res.adatok.length === 0) {
+        container.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;font-size:16px;">Nem található megrendelés a megadott feltételekkel.</div>';
+        return;
+      }
+      res.adatok.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.innerHTML = '<div class="result-badge">' + (t.rendeles_szam||"-") + '</div><h4>' + (t.szallito||"-") + '</h4><p>Munkaszám: <strong>' + (t.munkaszam||"-") + '</strong></p><p>Szallitas: ' + (t.datum||"-") + '</p>';
+        div.onclick = () => betoltAtvetel(t);
+        container.appendChild(div);
+      });
+    })
+    .catch(() => { container.innerHTML = '<div class="error-box" style="display:block">Kapcsolódási hiba.</div>'; });
+}
+
+function betoltAtvetel(adat) {
+  ujAtvetel();
+  if (adat.rendeles_szam) document.getElementById("rendeles_szam").value = adat.rendeles_szam;
+  if (adat.szallito) document.getElementById("szallito").value = adat.szallito;
+  navigate("page-atvetel-form");
+}
+
+function ujAtvetel() {
+  document.getElementById("anyag-container").innerHTML = "";
+  sorSzamlalo = 0; minoSzam = "";
+  ["rendeles_szam","szallito","szallitolevel_szam","ncr_szam"].forEach(id => { const e=document.getElementById(id); if(e) e.value=""; });
+  document.getElementById("atvevo").value = "";
+  document.getElementById("minosites").value = "";
+  document.getElementById("btn-megfelelt").className = "min-btn";
+  document.getElementById("btn-nem").className = "min-btn";
+  document.getElementById("ncr-mezo").style.display = "none";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("error").style.display = "none";
+  document.getElementById("datum").value = new Date().toISOString().slice(0,10);
+  ujAnyagsor();
+}
+
+function ujAnyagsor() {
+  sorSzamlalo++;
+  const id = sorSzamlalo;
+  const div = document.createElement("div");
+  div.className = "anyag-card";
+  div.id = "sor-" + id;
+  div.innerHTML = '<div class="anyag-card-title">' + id + '. tétel</div>' +
+    (id > 1 ? '<button class="del-btn" onclick="torolSor(' + id + ')">&#10005;</button>' : '') +
+    '<div class="subsection">Anyag azonosítás</div>' +
+    '<div class="field"><label>Munkaszám</label><input type="text" id="munkaszam_' + id + '" placeholder="pl. 31-501-26"></div>' +
+    '<div class="field"><label>Anyag megnevezése</label><input type="text" id="anyag_' + id + '" placeholder="pl. S355J2+N lemez"></div>' +
+    '<div class="row2"><div class="field"><label>Anyagminőség</label><input type="text" id="minoseg_' + id + '" placeholder="pl. S355J2+N"></div>' +
+    '<div class="field"><label>Adagszám (heat)</label><input type="text" id="heat_' + id + '" placeholder="pl. 123456"></div></div>' +
+    '<div class="row2"><div class="field"><label>Méret / Kivitel</label><input type="text" id="meret_' + id + '" placeholder="pl. 10x1000x2000"></div>' +
+    '<div class="field"><label>Mennyiség</label><input type="number" id="menny_' + id + '" placeholder="500"></div></div>' +
+    '<div class="row2"><div class="field narrow"><label>Egyseg</label><select id="egyseg_' + id + '"><option>kg</option><option>fm</option><option>db</option><option>m2</option><option>t</option></select></div>' +
+    '<div class="field"><label>Műbizonylat típusa</label><select id="mubiz_tipus_' + id + '"><option value="">-</option><option>3.1</option><option>3.2</option><option>2.2</option><option>2.1</option></select></div></div>' +
+    '<div class="field"><label>Műbizonylat száma</label><input type="text" id="mubiz_szam_' + id + '" placeholder="pl. MBC-2026-001"></div>' +
+    '<div class="subsection">Dokumentáció ellenőrzése</div>' +
+    '<div class="field"><label>Műbizonylat megléte</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="mubiz_megvan_' + id + '" value="Igen"> Igen</label><label class="check-opt nok"><input type="radio" name="mubiz_megvan_' + id + '" value="Nem"> Nem</label></div></div>' +
+    '<div class="field"><label>Megfelelőség</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="megfelelo_' + id + '" value="Igen"> Igen</label><label class="check-opt nok"><input type="radio" name="megfelelo_' + id + '" value="Nem"> Nem</label></div></div>' +
+    '<div class="field"><label>CE jelölés</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="ce_' + id + '" value="Igen"> Igen</label><label class="check-opt nok"><input type="radio" name="ce_' + id + '" value="Nem"> Nem</label><label class="check-opt warn"><input type="radio" name="ce_' + id + '" value="Nem szükséges"> Nem szükséges</label></div></div>' +
+    '<div class="subsection">Fizikai ellenőrzés</div>' +
+    '<div class="field"><label>Szemrevételezés</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="szemr_' + id + '" value="OK"> OK</label><label class="check-opt nok"><input type="radio" name="szemr_' + id + '" value="Hiba"> Hiba</label></div></div>' +
+    '<div class="field"><label>Méretellenőrzés</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="merete_' + id + '" value="OK"> OK</label><label class="check-opt nok"><input type="radio" name="merete_' + id + '" value="Eltérés"> Elteres</label></div></div>' +
+    '<div class="field"><label>Jelölés az anyagon</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="jeloles_' + id + '" value="Megvan"> Megvan</label><label class="check-opt nok"><input type="radio" name="jeloles_' + id + '" value="Hiányzik"> Hiányzik</label></div></div>' +
+    '<div class="field"><label>Csomagolás állapota</label><div class="check-row"><label class="check-opt ok"><input type="radio" name="csomagolas_' + id + '" value="OK"> OK</label><label class="check-opt nok"><input type="radio" name="csomagolas_' + id + '" value="Sérült"> Sérült</label></div></div>' +
+    '<div class="field"><label>Megjegyzés (opcionális)</label><textarea id="megj_' + id + '" placeholder="pl. enyhén korrodált él..."></textarea></div>';
+  document.getElementById("anyag-container").appendChild(div);
+}
+
+function torolSor(id) { const el=document.getElementById("sor-"+id); if(el) el.remove(); }
+
+document.addEventListener("click", function(e) {
+  const label = e.target.closest(".check-opt");
+  if (!label) return;
+  const radio = label.querySelector("input[type=radio]");
+  if (!radio) return;
+  radio.checked = true;
+  document.querySelectorAll('input[name="' + radio.name + '"]').forEach(r => {
+    r.closest(".check-opt").classList.remove("selected-ok","selected-nok","selected-warn");
+  });
+  if (label.classList.contains("ok")) label.classList.add("selected-ok");
+  if (label.classList.contains("nok")) label.classList.add("selected-nok");
+  if (label.classList.contains("warn")) label.classList.add("selected-warn");
+});
+
+function minosit(ertek) {
+  minoSzam = ertek;
+  document.getElementById("minosites").value = ertek;
+  document.getElementById("btn-megfelelt").className = "min-btn" + (ertek==="MEGFELELT"?" selected-megfelelt":"");
+  document.getElementById("btn-nem").className = "min-btn" + (ertek==="NEM FELELT MEG"?" selected-nem":"");
+  document.getElementById("ncr-mezo").style.display = ertek==="NEM FELELT MEG"?"block":"none";
+}
+
+function val(id) { const el=document.getElementById(id); return el?el.value.trim():""; }
+function radioVal(name) { const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:""; }
+function mutatHiba(uzenet, elId) { const el=document.getElementById(elId||"error"); el.textContent=uzenet; el.style.display="block"; }
+
+function kuldes() {
+  document.getElementById("error").style.display = "none";
+  const kotelezok = [{id:"datum",nev:"Beérkezés dátuma"},{id:"szallito",nev:"Szállító neve"},{id:"szallitolevel_szam",nev:"Szállítólevél szám"},{id:"atvevo",nev:"Átvevő neve"}];
+  for (const k of kotelezok) { if (!val(k.id)) { mutatHiba("Kötelező mező hiányzik: " + k.nev); return; } }
+  const cards = document.querySelectorAll(".anyag-card");
+  if (cards.length === 0) { mutatHiba("Adj meg legalabb egy anyagttételt!"); return; }
+  const sorok = [];
+  for (const card of cards) {
+    const idMatch = card.id.match(/sor-(\d+)/);
+    if (!idMatch) continue;
+    const i = idMatch[1];
+    if (!val("anyag_"+i)) { mutatHiba("Az anyag megnevezese kotelezo minden tétellel!"); return; }
+    if (!val("munkaszam_"+i)) { mutatHiba("A munkaszam kotelezo minden tétellel!"); return; }
+    sorok.push({
+      munkaszam:val("munkaszam_"+i), anyag_megnevezes:val("anyag_"+i), anyagminoseg:val("minoseg_"+i),
+      meret:val("meret_"+i), adagszam:val("heat_"+i), mennyiseg:val("menny_"+i), egyseg:val("egyseg_"+i),
+      mubizonylat_tipus:val("mubiz_tipus_"+i), mubizonylat_szam:val("mubiz_szam_"+i),
+      mubizonylat_megvan:radioVal("mubiz_megvan_"+i), megfelelo:radioVal("megfelelo_"+i),
+      ce_jeloles:radioVal("ce_"+i), szemrevetelez:radioVal("szemr_"+i),
+      meretellenorzes:radioVal("merete_"+i), jeloles_megvan:radioVal("jeloles_"+i),
+      csomagolas:radioVal("csomagolas_"+i), megjegyzes:val("megj_"+i)
+    });
+  }
+  if (!minoSzam) { mutatHiba("Kérlek adj meg minősítési eredményt!"); return; }
+  const csomag = {action:"atvetel", datum:val("datum"), rendeles_szam:val("rendeles_szam"),
+    szallito:val("szallito"), szallitolevel_szam:val("szallitolevel_szam"),
+    atvevo:val("atvevo"), minosites:minoSzam, ncr_szam:val("ncr_szam"), sorok};
+  document.getElementById("result").style.display = "none";
+  document.getElementById("spinner").style.display = "block";
+  document.getElementById("btn-send").disabled = true;
+  const url = SCRIPT_URL + "?adat=" + encodeURIComponent(JSON.stringify(csomag));
+  fetch(url, {method:"GET", redirect:"follow"})
+    .then(r => r.json())
+    .then(res => {
+      document.getElementById("spinner").style.display = "none";
+      document.getElementById("btn-send").disabled = false;
+      if (res.ok) {
+        document.getElementById("avizo-ertek").textContent = Array.isArray(res.avizo)?res.avizo.join(", "):res.avizo;
+        document.getElementById("result-info").textContent = "Rögzítette: " + csomag.atvevo + " | " + csomag.datum + " | " + sorok.length + " tétel";
+        document.getElementById("result").style.display = "block";
+        const pdfLink = document.getElementById("pdf-link");
+        if (res.pdf) { pdfLink.href=res.pdf; pdfLink.style.display="inline-block"; }
+        window.scrollTo(0,0);
+      } else { mutatHiba("Hiba: " + (res.hiba||"ismeretlen hiba")); }
+    })
+    .catch(err => { document.getElementById("spinner").style.display="none"; document.getElementById("btn-send").disabled=false; mutatHiba("Kapcsolódási hiba: "+err.message); });
+}
+
+function keresesStamp() {
+  const munkaszam=document.getElementById("st_munkaszam").value.trim();
+  const minoseg=document.getElementById("st_minoseg").value.trim();
+  const meret=document.getElementById("st_meret").value.trim();
+  const megnevezes=document.getElementById("st_megnevezes").value.trim();
+  const datum=document.getElementById("st_datum").value;
+  if (!munkaszam && !minoseg && !meret && !megnevezes && !datum) { alert("Adjon meg legalabb egy keresesi feltételt!"); return; }
+  const container = document.getElementById("stamp-results");
+  container.innerHTML = '<div class="spinner" style="display:block">&#9203; Kereses...</div>';
+  const params = new URLSearchParams({action:"stamp_search", munkaszam, minoseg, meret, megnevezes, datum});
+  fetch(SCRIPT_URL + "?" + params.toString(), {method:"GET", redirect:"follow"})
+    .then(r => r.json())
+    .then(res => {
+      container.innerHTML = "";
+      if (!res.ok || !res.adatok || res.adatok.length === 0) {
+        container.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;font-size:16px;">Nem található anyag a megadott feltételekkel.</div>';
+        return;
+      }
+      res.adatok.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "stamp-item";
+        const belyegzok = t.atbelyegzesek ? t.atbelyegzesek.map(b => '<span class="stamp-badge">'+b+'</span>').join("") : "";
+        div.innerHTML = '<h4>' + t.avizo_szam + '</h4><p>Anyag: <strong>' + (t.anyag_megnevezes||"-") + '</strong></p><p>Minoseg: ' + (t.anyagminoseg||"-") + ' | Meret: ' + (t.meret||"-") + '</p><p>Munkaszám: ' + (t.munkaszam||"-") + ' | Datum: ' + (t.datum||"-") + '</p>' + (belyegzok ? '<div class="stamp-history">Korábbi átbélyegzések: ' + belyegzok + '</div>' : '') + '<button class="btn-stamp" style="margin-top:12px;padding:13px" onclick='stampKivalaszt(' + JSON.stringify(t) + ')'>&#127991; Átbélyegzés</button>';
+        container.appendChild(div);
+      });
+    })
+    .catch(() => { container.innerHTML = '<div class="error-box" style="display:block">Kapcsolódási hiba.</div>'; });
+}
+
+function stampKivalaszt(adat) {
+  kivalasztottStamp = adat;
+  document.getElementById("stamp-original-data").innerHTML =
+    '<p><strong>AVIZO szam:</strong> ' + (adat.avizo_szam||"-") + '</p>' +
+    '<p><strong>Anyag:</strong> ' + (adat.anyag_megnevezes||"-") + '</p>' +
+    '<p><strong>Minoseg:</strong> ' + (adat.anyagminoseg||"-") + '</p>' +
+    '<p><strong>Eredeti meret:</strong> ' + (adat.meret||"-") + '</p>' +
+    '<p><strong>Munkaszám:</strong> ' + (adat.munkaszam||"-") + '</p>' +
+    '<p><strong>Mennyiség:</strong> ' + (adat.mennyiseg||"-") + ' ' + (adat.egyseg||"") + '</p>';
+  ["maradek_meret","maradek_menny","maradek_megj"].forEach(id => { document.getElementById(id).value=""; });
+  document.getElementById("stamp-result").style.display = "none";
+  document.getElementById("stamp-error").style.display = "none";
+  navigate("page-stamp-detail");
+}
+
+function atbelyeges() {
+  if (!kivalasztottStamp) return;
+  document.getElementById("stamp-error").style.display = "none";
+  const meret = document.getElementById("maradek_meret").value.trim();
+  const menny = document.getElementById("maradek_menny").value.trim();
+  if (!meret) { mutatHiba("A maradék méret megadása kötelező!", "stamp-error"); return; }
+  if (!menny) { mutatHiba("A maradék mennyiség megadása kötelező!", "stamp-error"); return; }
+  const csomag = {
+    action:"atbelyeges", eredeti_avizo:kivalasztottStamp.avizo_szam,
+    munkaszam:kivalasztottStamp.munkaszam, anyag_megnevezes:kivalasztottStamp.anyag_megnevezes,
+    anyagminoseg:kivalasztottStamp.anyagminoseg, eredeti_meret:kivalasztottStamp.meret,
+    maradek_meret:meret, maradek_menny:menny,
+    maradek_egyseg:document.getElementById("maradek_egyseg").value,
+    megjegyzes:document.getElementById("maradek_megj").value.trim(),
+    datum:new Date().toISOString().slice(0,10)
+  };
+  document.getElementById("stamp-spinner").style.display = "block";
+  const url = SCRIPT_URL + "?adat=" + encodeURIComponent(JSON.stringify(csomag));
+  fetch(url, {method:"GET", redirect:"follow"})
+    .then(r => r.json())
+    .then(res => {
+      document.getElementById("stamp-spinner").style.display = "none";
+      if (res.ok) {
+        document.getElementById("stamp-avizo").textContent = res.uj_azonosito;
+        document.getElementById("stamp-info").textContent = "Rögzítve: " + csomag.datum;
+        document.getElementById("stamp-result").style.display = "block";
+      } else { mutatHiba("Hiba: " + (res.hiba||"ismeretlen"), "stamp-error"); }
+    })
+    .catch(err => { document.getElementById("stamp-spinner").style.display="none"; mutatHiba("Kapcsolódási hiba: "+err.message,"stamp-error"); });
+}
+</script>
+</body>
+</html>
