@@ -28,9 +28,6 @@ html,body{height:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:
 .btn-atvetel .main-btn-icon{background:rgba(255,255,255,0.2)}
 .btn-atbelyeges{background:#2C2C2C;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
 .btn-atbelyeges .main-btn-icon{background:rgba(255,255,255,0.15)}
-.home-info{background:#fff;border-radius:12px;padding:16px;border-left:4px solid #0380C6;margin-top:8px}
-.home-info p{font-size:15px;color:#555;line-height:1.6}
-.home-info strong{color:#0380C6}
 .back-btn{display:flex;align-items:center;gap:8px;background:none;border:none;color:#0380C6;font-size:18px;font-weight:700;cursor:pointer;padding:0 0 20px}
 .back-arrow{font-size:24px;line-height:1}
 .section-header{background:#0380C6;color:#fff;border-radius:12px;padding:18px;margin-bottom:20px}
@@ -51,11 +48,19 @@ textarea{resize:vertical;min-height:64px}
 .search-title{font-size:15px;font-weight:700;color:#0380C6;margin-bottom:14px}
 .btn-search{width:100%;padding:15px;font-size:18px;font-weight:700;border-radius:10px;border:none;background:#0380C6;color:#fff;cursor:pointer;margin-top:6px}
 .btn-search:active{background:#0268a8}
-.result-item{background:#fff;border-radius:10px;padding:18px;margin-bottom:12px;border:2px solid #e0e8f0;cursor:pointer}
-.result-item:active{border-color:#0380C6;background:#f0f7fd}
-.result-item h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:5px}
-.result-item p{font-size:15px;color:#555;line-height:1.6}
+
+/* Checkbox találati lista */
+.result-item{background:#fff;border-radius:10px;padding:16px;margin-bottom:10px;border:2px solid #e0e8f0;display:flex;align-items:flex-start;gap:14px;cursor:pointer}
+.result-item.selected{border-color:#0380C6;background:#f0f7fd}
+.result-item-check{flex-shrink:0;margin-top:3px}
+.result-item-check input[type=checkbox]{width:24px;height:24px;accent-color:#0380C6;cursor:pointer}
+.result-item-body{flex:1}
+.result-item-body h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:5px}
+.result-item-body p{font-size:15px;color:#555;line-height:1.6}
 .result-badge{display:inline-block;background:#e8f3fb;color:#0380C6;font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;margin-bottom:8px}
+.btn-atvetel-kivalasztott{width:100%;padding:16px;font-size:18px;font-weight:700;border-radius:12px;border:none;background:#0380C6;color:#fff;cursor:pointer;margin-top:8px;display:none}
+.btn-atvetel-kivalasztott:active{background:#0268a8}
+
 .check-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .check-opt{display:flex;align-items:center;justify-content:center;gap:6px;font-size:16px;font-weight:600;background:#fff;border:2px solid #ccd3db;border-radius:10px;padding:12px 14px;cursor:pointer;flex:1;min-width:0;transition:all 0.15s}
 .check-opt input[type=radio]{display:none}
@@ -78,7 +83,7 @@ textarea{resize:vertical;min-height:64px}
 .btn-stamp{width:100%;padding:17px;font-size:19px;font-weight:700;border-radius:12px;border:none;background:#2C2C2C;color:#fff;cursor:pointer}
 .btn-stamp:active{background:#444}
 .result-box{display:none;background:#e8f5e9;border:2px solid #a5d6a7;border-radius:12px;padding:22px;margin-top:16px;text-align:center}
-.result-avizo{font-size:28px;font-weight:700;color:#2e7d32;letter-spacing:0.06em;margin:8px 0;word-break:break-all}
+.result-avizo{font-size:24px;font-weight:700;color:#2e7d32;letter-spacing:0.04em;margin:8px 0;word-break:break-all;line-height:1.4}
 .result-label{font-size:15px;color:#555}
 .result-info{font-size:14px;color:#666;margin-top:6px}
 .pdf-btn{display:none;margin-top:14px;padding:13px 24px;background:#0380C6;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px}
@@ -87,9 +92,8 @@ textarea{resize:vertical;min-height:64px}
 .stamp-item{background:#fff;border-radius:10px;padding:18px;margin-bottom:12px;border:2px solid #e0e8f0}
 .stamp-item h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:8px}
 .stamp-item p{font-size:15px;color:#555;line-height:1.7;margin-bottom:2px}
-.stamp-history{margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:13px;color:#888}
 .ertek-box{background:#e8f3fb;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;color:#0380C6;font-weight:700}
-.footer{text-align:center;padding:24px 16px;font-size:13px;color:#999;border-top:1px solid #ddd;margin-top:10px}
+.footer{display:none}
 </style>
 </head>
 <body>
@@ -113,9 +117,6 @@ textarea{resize:vertical;min-height:64px}
     <div class="main-btn-icon">&#127991;</div>
     <div class="main-btn-text"><h3>Átbélyegzés</h3><p>Maradék anyag nyilvántartásba vétele</p></div>
   </button>
-  <div class="home-info">
-    <p><strong>EN 1090 EXC3</strong> megfelelőségi rendszer<br>Gépszer Kft. | Trade Kontakt Üzem</p>
-  </div>
 </div>
 
 <!-- ÁTVÉTEL KERESÉS -->
@@ -124,14 +125,15 @@ textarea{resize:vertical;min-height:64px}
   <div class="section-header"><h2>&#128230; Anyag átvétel</h2><p>Adja meg a keresési feltételeket</p></div>
   <div class="search-box">
     <div class="search-title">&#128269; Keresés megrendelésben</div>
-    <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. 14"></div>
+    <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. 126"></div>
     <div class="field"><label>Szállító neve</label><input type="text" id="s_szallito" placeholder="pl. Globe Metal"></div>
     <div class="field"><label>Munkaszám</label><input type="text" id="s_munkaszam" placeholder="pl. 31-501-26"></div>
     <div class="field"><label>Várható szállítás (év/hónap)</label><input type="month" id="s_datum"></div>
     <button class="btn-search" onclick="keresesAtvetel()">Keresés indítása</button>
   </div>
   <div id="atvetel-results"></div>
-  <button class="btn-add" onclick="ujAtvetel(); navigate('page-atvetel-form')">+ Új átvétel rögzítése megrendelés nélkül</button>
+  <button class="btn-atvetel-kivalasztott" id="btn-atvetel-kivalasztott" onclick="kivalasztottakAtvetele()">&#128230; Kijelöltek átvétele</button>
+  <button class="btn-add" style="margin-top:8px" onclick="ujAtvetel(); navigate('page-atvetel-form')">+ Új átvétel rögzítése megrendelés nélkül</button>
 </div>
 
 <!-- ÁTVÉTEL ŰRLAP -->
@@ -141,7 +143,7 @@ textarea{resize:vertical;min-height:64px}
   <div class="card">
     <div class="card-title">Szállítmány fejléce</div>
     <div class="field"><label>Beérkezés dátuma</label><input type="date" id="datum"></div>
-    <div class="field"><label>Megrendelési szám</label><input type="text" id="rendeles_szam" placeholder="pl. 14"></div>
+    <div class="field"><label>Megrendelési szám</label><input type="text" id="rendeles_szam" placeholder="pl. 126"></div>
     <div class="field"><label>Szállító neve</label><input type="text" id="szallito" placeholder="pl. Globe Metal"></div>
     <div class="field"><label>Szállítólevél szám</label><input type="text" id="szallitolevel_szam" placeholder="pl. SL-2026-0441"></div>
     <div class="field"><label>Átvevő neve</label>
@@ -174,10 +176,10 @@ textarea{resize:vertical;min-height:64px}
       <input type="text" id="ncr_szam" placeholder="pl. NCR-2604-001">
     </div>
   </div>
-  <button class="btn-send" id="btn-send" onclick="kuldes()">Rögzítés és AVIZÓ szám generálása</button>
+  <button class="btn-send" id="btn-send" onclick="kuldes()">Rögzítés és azonosító generálása</button>
   <div class="spinner" id="spinner">&#9203; Küldés folyamatban...</div>
   <div class="result-box" id="result">
-    <div class="result-label">Generált AVIZÓ szám</div>
+    <div class="result-label">Generált anyag azonosító(k)</div>
     <div class="result-avizo" id="avizo-ertek">—</div>
     <div class="result-info" id="result-info"></div>
     <a class="pdf-btn" id="pdf-link" href="#" target="_blank">&#128196; PDF megnyitása</a>
@@ -191,6 +193,7 @@ textarea{resize:vertical;min-height:64px}
   <div class="section-header"><h2>&#127991; Átbélyegzés</h2><p>Keresse meg az átbélyegzendő anyagot</p></div>
   <div class="search-box">
     <div class="search-title">&#128269; Keresés</div>
+    <div class="field"><label>Anyag azonosító</label><input type="text" id="st_azonosito" placeholder="pl. 31-501-26/1"></div>
     <div class="field"><label>Munkaszám</label><input type="text" id="st_munkaszam" placeholder="pl. 31-501-26"></div>
     <div class="field"><label>Anyagminőség</label><input type="text" id="st_minoseg" placeholder="pl. S355J2+N"></div>
     <div class="field"><label>Anyag méret</label><input type="text" id="st_meret" placeholder="pl. 1000x1500x10"></div>
@@ -231,21 +234,19 @@ textarea{resize:vertical;min-height:64px}
   <div class="error-box" id="stamp-error"></div>
 </div>
 
-<div class="footer">Gépszer Kft. | Trade Kontakt Üzem | EN 1090 EXC3</div>
-
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXaUTqDHRhq6YZ0Lx4JlHz1W6W9GBvhXCLfeLF0OpSK9Tzlwy_LYSPVwO9Xpy_4jEg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUs30XaLNyD9suDebwbEhgfLrHs-ohieGHw_7-ROXXgVMcynFHiF5AQhhHAtnI2vVp/exec";
 let sorSzamlalo = 0;
 let minoSzam = "";
 let kivalasztottStamp = null;
+let keresesTalalatok = [];
 
 function navigate(pageId) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
   document.getElementById(pageId).classList.add("active");
   window.scrollTo(0,0);
 }
 
-// JSONP - CORS megoldás
 function jsonpKeres(url, callback, errCallback) {
   const cbName = "cb_" + Date.now();
   const script = document.createElement("script");
@@ -254,23 +255,26 @@ function jsonpKeres(url, callback, errCallback) {
   window[cbName] = function(data) {
     done = true;
     delete window[cbName];
-    document.body.removeChild(script);
+    if (document.body.contains(script)) document.body.removeChild(script);
     callback(data);
   };
   script.onerror = function() {
-    if (!done) { delete window[cbName]; if(errCallback) errCallback(); }
+    if (!done) { delete window[cbName]; if (errCallback) errCallback(); }
   };
   script.src = fullUrl;
   document.body.appendChild(script);
   setTimeout(function() {
-    if (!done) { delete window[cbName]; if(document.body.contains(script)) document.body.removeChild(script); if(errCallback) errCallback(); }
+    if (!done) {
+      delete window[cbName];
+      if (document.body.contains(script)) document.body.removeChild(script);
+      if (errCallback) errCallback();
+    }
   }, 30000);
 }
 
-// GET fetch - kereséshez
 function fetchKeres(url, callback, errCallback) {
   fetch(url, {method:"GET", redirect:"follow"})
-    .then(r => r.json())
+    .then(function(r) { return r.json(); })
     .then(callback)
     .catch(errCallback || function(){});
 }
@@ -281,6 +285,7 @@ document.addEventListener("DOMContentLoaded", function() {
   ujAnyagsor();
 });
 
+// ── Átvétel keresés ───────────────────────────────────────
 function keresesAtvetel() {
   const rendeles = document.getElementById("s_rendeles").value.trim();
   const szallito = document.getElementById("s_szallito").value.trim();
@@ -289,6 +294,8 @@ function keresesAtvetel() {
   if (!rendeles && !szallito && !munkaszam && !datum) { alert("Adjon meg legalább egy keresési feltételt!"); return; }
   const container = document.getElementById("atvetel-results");
   container.innerHTML = "<div class=\"spinner\" style=\"display:block\">&#9203; Keresés...</div>";
+  document.getElementById("btn-atvetel-kivalasztott").style.display = "none";
+  keresesTalalatok = [];
   const params = new URLSearchParams({action:"search", rendeles, szallito, munkaszam, datum});
   fetchKeres(SCRIPT_URL + "?" + params.toString(),
     function(res) {
@@ -297,16 +304,26 @@ function keresesAtvetel() {
         container.innerHTML = "<div class=\"card\" style=\"text-align:center;color:#888;padding:20px;font-size:16px;\">Nem található megrendelés a megadott feltételekkel.</div>";
         return;
       }
-      res.adatok.forEach(function(t) {
+      keresesTalalatok = res.adatok;
+      res.adatok.forEach(function(t, idx) {
         const div = document.createElement("div");
         div.className = "result-item";
-        div.innerHTML = "<div class=\"result-badge\">" + (t.rendeles_szam||"—") + "</div>" +
+        div.id = "result-item-" + idx;
+        div.innerHTML =
+          "<div class=\"result-item-check\"><input type=\"checkbox\" id=\"chk-"+idx+"\" onchange=\"checkboxValtozas()\"></div>" +
+          "<div class=\"result-item-body\">" +
+          "<div class=\"result-badge\">" + (t.rendeles_szam||"—") + "</div>" +
           "<h4>" + (t.szallito||"—") + "</h4>" +
           "<p>Munkaszám: <strong>" + (t.munkaszam||"—") + "</strong></p>" +
           "<p>Anyag: " + (t.anyag||"—") + " | " + (t.minoseg||"") + "</p>" +
           "<p>Méret: " + (t.meret||"—") + " | " + (t.mennyiseg||"") + " " + (t.egyseg||"") + "</p>" +
-          "<p>Várható: " + (t.datum||"—") + "</p>";
-        div.onclick = function() { betoltAtvetel(t); };
+          "<p>Várható: " + (t.datum||"—") + "</p>" +
+          "</div>";
+        div.querySelector("label,div.result-item-body").onclick = function() {
+          const chk = document.getElementById("chk-"+idx);
+          chk.checked = !chk.checked;
+          checkboxValtozas();
+        };
         container.appendChild(div);
       });
     },
@@ -314,21 +331,47 @@ function keresesAtvetel() {
   );
 }
 
-function betoltAtvetel(adat) {
+function checkboxValtozas() {
+  const kivalasztott = getKivalasztottIndexek();
+  const btn = document.getElementById("btn-atvetel-kivalasztott");
+  btn.style.display = kivalasztott.length > 0 ? "block" : "none";
+  btn.textContent = "&#128230; " + kivalasztott.length + " tétel átvétele";
+  keresesTalalatok.forEach(function(t, idx) {
+    const item = document.getElementById("result-item-" + idx);
+    const chk = document.getElementById("chk-" + idx);
+    if (item) item.classList.toggle("selected", chk && chk.checked);
+  });
+}
+
+function getKivalasztottIndexek() {
+  const kivalasztott = [];
+  keresesTalalatok.forEach(function(t, idx) {
+    const chk = document.getElementById("chk-" + idx);
+    if (chk && chk.checked) kivalasztott.push(idx);
+  });
+  return kivalasztott;
+}
+
+function kivalasztottakAtvetele() {
+  const indexek = getKivalasztottIndexek();
+  if (indexek.length === 0) return;
   ujAtvetel();
-  if (adat.rendeles_szam) document.getElementById("rendeles_szam").value = adat.rendeles_szam;
-  if (adat.szallito) document.getElementById("szallito").value = adat.szallito;
-  // Első anyagsor előtöltése
-  if (sorSzamlalo === 0) ujAnyagsor();
-  const id = sorSzamlalo;
-  if (adat.munkaszam) { const e=document.getElementById("munkaszam_"+id); if(e) e.value=adat.munkaszam; }
-  if (adat.anyag) { const e=document.getElementById("anyag_"+id); if(e) e.value=adat.anyag; }
-  if (adat.minoseg) { const e=document.getElementById("minoseg_"+id); if(e) e.value=adat.minoseg; }
-  if (adat.meret) { const e=document.getElementById("meret_"+id); if(e) e.value=adat.meret; }
-  if (adat.mennyiseg) { const e=document.getElementById("menny_"+id); if(e) e.value=adat.mennyiseg; }
-  if (adat.egyseg) { const e=document.getElementById("egyseg_"+id); if(e) e.value=adat.egyseg; }
-  if (adat.netto_egysegar) { const e=document.getElementById("egysegar_"+id); if(e) e.value=adat.netto_egysegar; }
-  if (adat.mubiz) { const e=document.getElementById("mubiz_tipus_"+id); if(e) e.value=adat.mubiz; }
+  const elso = keresesTalalatok[indexek[0]];
+  if (elso.rendeles_szam) document.getElementById("rendeles_szam").value = elso.rendeles_szam;
+  if (elso.szallito) document.getElementById("szallito").value = elso.szallito;
+  indexek.forEach(function(idx, i) {
+    const t = keresesTalalatok[idx];
+    if (i > 0) ujAnyagsor();
+    const id = sorSzamlalo;
+    if (t.munkaszam) { const e=document.getElementById("munkaszam_"+id); if(e) e.value=t.munkaszam; }
+    if (t.anyag) { const e=document.getElementById("anyag_"+id); if(e) e.value=t.anyag; }
+    if (t.minoseg) { const e=document.getElementById("minoseg_"+id); if(e) e.value=t.minoseg; }
+    if (t.meret) { const e=document.getElementById("meret_"+id); if(e) e.value=t.meret; }
+    if (t.mennyiseg) { const e=document.getElementById("menny_"+id); if(e) e.value=t.mennyiseg; }
+    if (t.egyseg) { const e=document.getElementById("egyseg_"+id); if(e) e.value=t.egyseg; }
+    if (t.netto_egysegar) { const e=document.getElementById("egysegar_"+id); if(e) e.value=t.netto_egysegar; }
+    if (t.mubiz) { const e=document.getElementById("mubiz_tipus_"+id); if(e) e.value=t.mubiz; }
+  });
   navigate("page-atvetel-form");
 }
 
@@ -346,9 +389,10 @@ function ujAtvetel() {
   document.getElementById("result").style.display = "none";
   document.getElementById("error").style.display = "none";
   document.getElementById("datum").value = new Date().toISOString().slice(0,10);
+  ujAnyagsor();
 }
 
-function ujAnyagsor(adatok) {
+function ujAnyagsor() {
   sorSzamlalo++;
   const id = sorSzamlalo;
   const div = document.createElement("div");
@@ -447,7 +491,8 @@ function kuldes() {
       document.getElementById("spinner").style.display = "none";
       document.getElementById("btn-send").disabled = false;
       if (res.ok) {
-        document.getElementById("avizo-ertek").textContent = Array.isArray(res.avizo)?res.avizo.join(", "):res.avizo;
+        const azonosito = Array.isArray(res.avizo) ? res.avizo.join("\n") : res.avizo;
+        document.getElementById("avizo-ertek").textContent = azonosito;
         document.getElementById("result-info").textContent = "Rögzítette: "+csomag.atvevo+" | "+csomag.datum+" | "+sorok.length+" tétel";
         document.getElementById("result").style.display = "block";
         const pdfLink = document.getElementById("pdf-link");
@@ -463,14 +508,20 @@ function kuldes() {
   );
 }
 
+// ── Átbélyegzés keresés ───────────────────────────────────
 function keresesStamp() {
-  const munkaszam=val("st_munkaszam"), minoseg=val("st_minoseg"),
-        meret=val("st_meret"), megnevezes=val("st_megnevezes"),
-        datum=document.getElementById("st_datum").value;
-  if (!munkaszam && !minoseg && !meret && !megnevezes && !datum) { alert("Adjon meg legalább egy keresési feltételt!"); return; }
+  const azonosito = val("st_azonosito");
+  const munkaszam = val("st_munkaszam");
+  const minoseg = val("st_minoseg");
+  const meret = val("st_meret");
+  const megnevezes = val("st_megnevezes");
+  const datum = document.getElementById("st_datum").value;
+  if (!azonosito && !munkaszam && !minoseg && !meret && !megnevezes && !datum) {
+    alert("Adjon meg legalább egy keresési feltételt!"); return;
+  }
   const container = document.getElementById("stamp-results");
   container.innerHTML = "<div class=\"spinner\" style=\"display:block\">&#9203; Keresés...</div>";
-  const params = new URLSearchParams({action:"stamp_search", munkaszam, minoseg, meret, megnevezes, datum});
+  const params = new URLSearchParams({action:"stamp_search", azonosito, munkaszam, minoseg, meret, megnevezes, datum});
   fetchKeres(SCRIPT_URL+"?"+params.toString(),
     function(res) {
       container.innerHTML = "";
@@ -481,12 +532,14 @@ function keresesStamp() {
       res.adatok.forEach(function(t) {
         const div = document.createElement("div");
         div.className = "stamp-item";
-        div.innerHTML = "<h4>"+t.avizo_szam+"</h4>" +
+        div.innerHTML =
+          "<h4>"+t.avizo_szam+"</h4>" +
           "<p>Anyag: <strong>"+(t.anyag_megnevezes||"—")+"</strong></p>" +
           "<p>Minőség: "+(t.anyagminoseg||"—")+" | Méret: "+(t.meret||"—")+"</p>" +
           "<p>Munkaszám: "+(t.munkaszam||"—")+" | Dátum: "+(t.datum||"—")+"</p>" +
           "<p>Egységár: "+(t.netto_egysegar||"—")+" Ft</p>" +
-          "<button class=\"btn-stamp\" style=\"margin-top:12px;padding:13px\" onclick=\"stampKivalaszt("+JSON.stringify(t).replace(/"/g,"&quot;")+")\" >&#127991; Átbélyegzés</button>";
+          "<button class=\"btn-stamp\" style=\"margin-top:12px;padding:13px\" onclick=\"stampKivalaszt(this)\">&#127991; Átbélyegzés</button>";
+        div.querySelector(".btn-stamp").setAttribute("data-adat", JSON.stringify(t));
         container.appendChild(div);
       });
     },
@@ -494,10 +547,11 @@ function keresesStamp() {
   );
 }
 
-function stampKivalaszt(adat) {
+function stampKivalaszt(btn) {
+  const adat = JSON.parse(btn.getAttribute("data-adat"));
   kivalasztottStamp = adat;
   document.getElementById("stamp-original-data").innerHTML =
-    "<p><strong>AVIZÓ szám:</strong> "+(adat.avizo_szam||"—")+"</p>" +
+    "<p><strong>Anyag azonosító:</strong> "+(adat.avizo_szam||"—")+"</p>" +
     "<p><strong>Anyag:</strong> "+(adat.anyag_megnevezes||"—")+"</p>" +
     "<p><strong>Minőség:</strong> "+(adat.anyagminoseg||"—")+"</p>" +
     "<p><strong>Méret:</strong> "+(adat.meret||"—")+"</p>" +
@@ -517,12 +571,9 @@ function szamolErtek() {
   const menny = parseFloat(val("maradek_menny")) || 0;
   const box = document.getElementById("becsult-ertek-box");
   if (egysegar > 0 && menny > 0) {
-    const ertek = (egysegar * menny).toLocaleString("hu-HU");
-    box.textContent = "Becsült érték: " + ertek + " Ft";
+    box.textContent = "Becsült érték: " + (egysegar * menny).toLocaleString("hu-HU") + " Ft";
     box.style.display = "block";
-  } else {
-    box.style.display = "none";
-  }
+  } else { box.style.display = "none"; }
 }
 
 function atbelyeges() {
@@ -538,8 +589,7 @@ function atbelyeges() {
     netto_egysegar:kivalasztottStamp.netto_egysegar,
     maradek_meret:meret, maradek_menny:menny,
     maradek_egyseg:document.getElementById("maradek_egyseg").value,
-    megjegyzes:val("maradek_megj"),
-    datum:new Date().toISOString().slice(0,10)
+    megjegyzes:val("maradek_megj"), datum:new Date().toISOString().slice(0,10)
   };
   document.getElementById("stamp-spinner").style.display = "block";
   const url = SCRIPT_URL + "?adat=" + encodeURIComponent(JSON.stringify(csomag));
