@@ -124,12 +124,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="login-title">Bejelentkezés</div>
     <div class="login-sub">Válassza ki a nevét és adja meg PIN kódját</div>
     <select class="login-user-select" id="login-nev">
-      <option value="">— válasszon nevet —</option>
-      <option>Kriszt Antal</option>
-      <option>Horváth Balázs</option>
-      <option>Geiszler István</option>
-      <option>Hüse Stefan</option>
-      <option>Sütő Szabolcs</option>
+      <option value="">— betöltés... —</option>
     </select>
     <div class="pin-dots">
       <div class="pin-dot" id="dot-0"></div>
@@ -298,6 +293,28 @@ let pinKod = "";
 let bejelentkezettNev = "";
 let bejelentkezettSzerepkor = "";
 
+function betoltNevek() {
+  const params = new URLSearchParams({action:"getUsers"});
+  fetchKeres(SCRIPT_URL + "?" + params.toString(),
+    function(res) {
+      const select = document.getElementById("login-nev");
+      select.innerHTML = "<option value=\"\">— válasszon nevet —</option>";
+      if (res.ok && res.nevek) {
+        res.nevek.forEach(function(nev) {
+          const opt = document.createElement("option");
+          opt.value = nev;
+          opt.textContent = nev;
+          select.appendChild(opt);
+        });
+      }
+    },
+    function() {
+      const select = document.getElementById("login-nev");
+      select.innerHTML = "<option value=\"\">— hiba, frissítsen —</option>";
+    }
+  );
+}
+
 function pinBill(szam) {
   if (pinKod.length >= 4) return;
   pinKod += String(szam);
@@ -361,7 +378,7 @@ function loginEllenorzes() {
   );
 }
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyar8R7cf-QaXjP9Jx-xZi4K4RD6d4RrTYxT4NCQnpxOt4lC1uKsqUcFby_YdnER_KM/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_uAdCq6xyh4rElsa3K_aa2_DLyh-wtnHlqs2GZt-kidge0r49X1wsb0auz2L1Dg4W/exec";
 let sorSzamlalo = 0;
 let minoSzam = "";
 let kivalasztottStamp = null;
@@ -406,6 +423,7 @@ function fetchKeres(url, callback, errCallback) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  betoltNevek();
   const d = document.getElementById("datum");
   if (d) d.value = new Date().toISOString().slice(0,10);
   ujAnyagsor();
