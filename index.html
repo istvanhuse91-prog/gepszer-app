@@ -122,6 +122,21 @@ textarea{resize:vertical;min-height:64px}
 .login-error{display:none;background:#fdecea;border:2px solid #f5c6c6;border-radius:10px;padding:12px;margin-top:14px;font-size:15px;color:#c62828;font-weight:600;text-align:center}
 .login-user-select{width:100%;font-size:17px;padding:13px 14px;border:2px solid #ccd3db;border-radius:10px;background:#fafbfc;color:#1a1a1a;-webkit-appearance:none;appearance:none;margin-bottom:16px}
 .login-user-select:focus{outline:none;border-color:#0380C6}
+/* === LEFOGLALÁS — új stílusok === */
+.btn-lefoglal{background:#7B1FA2;color:#fff;box-shadow:0 4px 16px rgba(123,31,162,0.25)}
+.btn-lefoglal .main-btn-icon{background:rgba(255,255,255,0.15)}
+.btn-lefoglal-exec{width:100%;padding:17px;font-size:19px;font-weight:700;border-radius:12px;border:none;background:#7B1FA2;color:#fff;cursor:pointer;margin-top:12px}
+.btn-lefoglal-exec:active{background:#9C27B0}
+.btn-feloldas{width:100%;padding:13px;font-size:16px;font-weight:600;border-radius:10px;border:none;background:#fff;color:#7B1FA2;border:2px solid #7B1FA2;cursor:pointer;margin-top:8px}
+.btn-feloldas:active{background:#F3E5F5}
+.lefoglal-item{background:#fff;border-radius:12px;padding:18px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid #9E9E9E}
+.lefoglal-item.aktiv{border-left-color:#43A047}
+.lefoglal-item.lefoglalva{border-left-color:#FB8C00;background:#FFF8E1}
+.lefoglal-item h4{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lefoglal-item p{font-size:15px;color:#555;line-height:1.7;margin-bottom:2px}
+.badge-aktiv{display:inline-block;font-size:12px;font-weight:700;background:#E8F5E9;color:#2E7D32;padding:3px 8px;border-radius:10px;letter-spacing:0.3px}
+.badge-lefoglalva{display:inline-block;font-size:12px;font-weight:700;background:#FFE0B2;color:#E65100;padding:3px 8px;border-radius:10px;letter-spacing:0.3px}
+.lefoglal-info-box{background:#F3E5F5;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:14px;color:#6A1B9A}
 </style>
 </head>
 <body>
@@ -178,6 +193,10 @@ textarea{resize:vertical;min-height:64px}
   <button class="main-btn btn-atbelyeges" onclick="navigate('page-stamp-search')">
     <div class="main-btn-icon">&#127991;</div>
     <div class="main-btn-text"><h3>Átbélyegzés</h3><p>Maradék anyag nyilvántartásba vétele</p></div>
+  </button>
+  <button class="main-btn btn-lefoglal" onclick="navigate('page-lefoglal-search')">
+    <div class="main-btn-icon">&#128204;</div>
+    <div class="main-btn-text"><h3>Maradék anyag</h3><p>Lefoglalás projektre / feloldás</p></div>
   </button>
   <button class="main-btn btn-kivezet" id="btn-kivezet-home" onclick="navigate('page-kivezet-search')" style="display:none">
     <div class="main-btn-icon">&#9940;</div>
@@ -337,6 +356,61 @@ textarea{resize:vertical;min-height:64px}
   <div class="error-box" id="kivezet-error"></div>
 </div>
 
+<!-- LEFOGLALÁS KERESÉS -->
+<div class="page" id="page-lefoglal-search">
+  <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header" style="background:#7B1FA2"><h2>&#128204; Maradék anyag lefoglalása</h2><p>Keressen és foglaljon le maradék anyagot</p></div>
+  <div class="search-box" style="border-color:#7B1FA2">
+    <div class="search-title" style="color:#7B1FA2">&#128269; Keresés</div>
+    <p style="color:#666;font-size:13px;margin-bottom:12px;line-height:1.4">A találatok mind az <strong>elérhető</strong>, mind a <strong>már lefoglalt</strong> maradékokat tartalmazzák.</p>
+    <div class="field"><label>Anyag azonosító</label><input type="text" id="lf_azonosito" placeholder="pl. 31-501-26/3-M1"></div>
+    <div class="field"><label>Munkaszám</label><input type="text" id="lf_munkaszam" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)"></div>
+    <div class="field"><label>Anyagminőség</label><input type="text" id="lf_minoseg" placeholder="pl. S355"></div>
+    <div class="field"><label>Méret</label><input type="text" id="lf_meret" placeholder="pl. 10x500"></div>
+    <div class="field"><label>Anyag megnevezése</label><input type="text" id="lf_megnevezes" placeholder="pl. acéllemez"></div>
+    <div class="field"><label>Átbélyegzés dátuma (év/hónap)</label><input type="month" id="lf_datum"></div>
+    <button class="btn-search" style="background:#7B1FA2" onclick="keresesLefoglal()">Keresés indítása</button>
+  </div>
+  <div id="lefoglal-results"></div>
+</div>
+
+<!-- LEFOGLALÁS RÉSZLETEK (foglalási űrlap) -->
+<div class="page" id="page-lefoglal-detail">
+  <button class="back-btn" onclick="navigate('page-lefoglal-search')"><span class="back-arrow">&#8249;</span> Vissza a kereséshez</button>
+  <div class="section-header" style="background:#7B1FA2"><h2>&#128204; Foglalás megerősítése</h2><p>Adja meg a foglalási adatokat</p></div>
+  <div class="card">
+    <div class="card-title" style="color:#7B1FA2">Lefoglalandó anyag</div>
+    <div id="lefoglal-original-data"></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:#7B1FA2">Foglalási adatok</div>
+    <div class="field">
+      <label>Munkaszám, amire foglal *</label>
+      <input type="text" id="lf_munkaszam_uj" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)">
+    </div>
+    <div class="field">
+      <label>Lehetséges felhasználási dátum (opcionális)</label>
+      <input type="date" id="lf_datum_uj">
+    </div>
+    <div class="field">
+      <label>Megjegyzés (opcionális)</label>
+      <textarea id="lf_megj" placeholder="pl. Csak az első héten lesz szükségünk rá..."></textarea>
+    </div>
+  </div>
+  <button class="btn-lefoglal-exec" onclick="lefoglalVegrehajt()">&#128204; Lefoglalás</button>
+  <div class="spinner" id="lefoglal-spinner">&#9203; Foglalás folyamatban...</div>
+  <div class="result-box" id="lefoglal-result" style="background:#F3E5F5;border-color:#CE93D8">
+    <div class="result-label" style="color:#6A1B9A">Sikeres foglalás</div>
+    <div class="result-avizo">
+      <div class="result-avizo-sor" style="background:#fff;border-color:#CE93D8">
+        <span class="result-avizo-kod" id="lefoglal-avizo" style="color:#6A1B9A"></span>
+      </div>
+    </div>
+    <div class="result-info" id="lefoglal-info"></div>
+  </div>
+  <div class="error-box" id="lefoglal-error"></div>
+</div>
+
 <script>
 // ============================================================================
 // KONFIGURÁCIÓ
@@ -355,6 +429,7 @@ let sorSzamlalo = 0;
 let minoSzam = "";
 let kivalasztottStamp = null;
 let kivalasztottKivezet = null;
+let kivalasztottLefoglal = null;
 let keresesTalalatok = [];
 
 // ============================================================================
@@ -446,7 +521,7 @@ function kijelentkezes() {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page-login").style.display = "flex";
   // Listák kiürítése
-  ["atvetel-results","stamp-results","kivezet-results"].forEach(id => {
+  ["atvetel-results","stamp-results","kivezet-results","lefoglal-results"].forEach(id => {
     const e = document.getElementById(id); if (e) e.innerHTML = "";
   });
 }
@@ -854,8 +929,11 @@ async function keresesStamp() {
       const div = document.createElement("div");
       div.className = "stamp-item" + (t.forras === "maradek" ? " maradek-anyag" : "");
       const maradekJelzo = t.forras === "maradek" ? "<span class='result-badge-maradek'>&#9855; Maradék anyag</span>" : "";
+      const lefoglalvaJelzo = t.statusz === "LEFOGLALVA"
+        ? "<span class='badge-lefoglalva' style='margin-left:6px'>&#128204; LEFOGLALVA: " + (t.lefoglalva_munkaszam || "—") + "</span>"
+        : "";
       div.innerHTML =
-        "<h4>" + t.avizo_szam + " " + maradekJelzo + "</h4>" +
+        "<h4>" + t.avizo_szam + " " + maradekJelzo + " " + lefoglalvaJelzo + "</h4>" +
         "<p>Anyag: <strong>" + (t.anyag_megnevezes || "—") + "</strong></p>" +
         "<p>Minőség: " + (t.anyagminoseg || "—") + " | Méret: " + (t.meret || "—") + "</p>" +
         "<p>Munkaszám: " + (t.munkaszam || "—") + " | Dátum: " + (t.datum || "—") + "</p>" +
@@ -903,7 +981,7 @@ function szamolErtek() {
 }
 
 // ============================================================================
-// ÁTBÉLYEGZÉS — VÉGREHAJTÁS (POST body, +nev a szerepkör-checkhez)
+// ÁTBÉLYEGZÉS — VÉGREHAJTÁS
 // ============================================================================
 async function atbelyeges() {
   if (!kivalasztottStamp) return;
@@ -971,8 +1049,11 @@ async function keresesKivezet() {
       const div = document.createElement("div");
       div.className = "kivezet-item" + (t.forras === "maradek" ? " maradek-anyag" : "");
       const maradekJelzo = t.forras === "maradek" ? "<span class='result-badge-maradek'>&#9855; Maradék anyag</span>" : "";
+      const lefoglalvaJelzo = t.statusz === "LEFOGLALVA"
+        ? "<span class='badge-lefoglalva' style='margin-left:6px'>&#128204; LEFOGLALVA: " + (t.lefoglalva_munkaszam || "—") + "</span>"
+        : "";
       div.innerHTML =
-        "<h4>" + t.avizo_szam + " " + maradekJelzo + "</h4>" +
+        "<h4>" + t.avizo_szam + " " + maradekJelzo + " " + lefoglalvaJelzo + "</h4>" +
         "<p>Anyag: <strong>" + (t.anyag_megnevezes || "—") + "</strong></p>" +
         "<p>Minőség: " + (t.anyagminoseg || "—") + " | Méret: " + (t.meret || "—") + "</p>" +
         "<p>Munkaszám: " + (t.munkaszam || "—") + " | Dátum: " + (t.datum || "—") + "</p>" +
@@ -1004,7 +1085,7 @@ function kivezetKivalaszt(btn) {
 }
 
 // ============================================================================
-// KIVEZETÉS — VÉGREHAJTÁS (POST body, +nev)
+// KIVEZETÉS — VÉGREHAJTÁS
 // ============================================================================
 async function kivezetVegrehajt() {
   if (!kivalasztottKivezet) return;
@@ -1039,6 +1120,160 @@ async function kivezetVegrehajt() {
   } catch (e) {
     document.getElementById("kivezet-spinner").style.display = "none";
     mutatHiba("Kapcsolódási hiba: " + e.message, "kivezet-error");
+  }
+}
+
+// ============================================================================
+// LEFOGLALÁS — KERESÉS
+// ============================================================================
+async function keresesLefoglal() {
+  const params = {
+    azonosito: val("lf_azonosito"),
+    munkaszam: val("lf_munkaszam"),
+    minoseg: val("lf_minoseg"),
+    meret: val("lf_meret"),
+    megnevezes: val("lf_megnevezes"),
+    datum: document.getElementById("lf_datum").value
+  };
+  if (!Object.values(params).some(v => v)) {
+    alert("Adjon meg legalább egy keresési feltételt!");
+    return;
+  }
+  const cont = document.getElementById("lefoglal-results");
+  cont.innerHTML = "<div class='spinner' style='display:block'>&#9203; Keresés...</div>";
+  try {
+    const res = await api("GET", "/gepszer/lefoglal/keres", params);
+    cont.innerHTML = "";
+    if (!res.ok || !res.adatok || !res.adatok.length) {
+      cont.innerHTML = "<div class='card' style='text-align:center;color:#888;padding:20px;font-size:16px;'>Nem található maradék anyag a megadott feltételekkel.</div>";
+      return;
+    }
+    res.adatok.forEach(t => {
+      const isLefoglalva = t.statusz === "LEFOGLALVA";
+      const div = document.createElement("div");
+      div.className = "lefoglal-item " + (isLefoglalva ? "lefoglalva" : "aktiv");
+
+      const badge = isLefoglalva
+        ? "<span class='badge-lefoglalva'>&#128204; LEFOGLALVA</span>"
+        : "<span class='badge-aktiv'>&#10003; ELÉRHETŐ</span>";
+
+      const foglalasInfo = isLefoglalva
+        ? "<div class='lefoglal-info-box'>" +
+          "<strong>Foglalás:</strong> " + (t.lefoglalva_munkaszam || "—") + " · " + (t.lefoglalta_nev || "—") +
+          (t.lehetseges_datum ? " · várható: " + t.lehetseges_datum : "") +
+          "</div>"
+        : "";
+
+      const gomb = isLefoglalva
+        ? "<button class='btn-feloldas' onclick='feloldasMegerosit(this)'>&#10227; Foglalás feloldása</button>"
+        : "<button class='btn-lefoglal-exec' style='margin-top:12px;padding:13px' onclick='lefoglalKivalaszt(this)'>&#128204; Lefoglalás</button>";
+
+      div.innerHTML =
+        "<h4>" + t.avizo_szam + " " + badge + "</h4>" +
+        "<p>Anyag: <strong>" + (t.anyag_megnevezes || "—") + "</strong></p>" +
+        "<p>Minőség: " + (t.anyagminoseg || "—") + " | Méret: " + (t.meret || "—") + "</p>" +
+        "<p>Munkaszám: " + (t.munkaszam || "—") + " | Mennyiség: " + (t.mennyiseg || "—") + " " + (t.egyseg || "") + "</p>" +
+        foglalasInfo +
+        gomb;
+
+      const btn = div.querySelector("button");
+      btn.setAttribute("data-adat", JSON.stringify(t));
+      cont.appendChild(div);
+    });
+  } catch (e) {
+    cont.innerHTML = "<div class='error-box' style='display:block'>Kapcsolódási hiba: " + e.message + "</div>";
+  }
+}
+
+function lefoglalKivalaszt(btn) {
+  const adat = JSON.parse(btn.getAttribute("data-adat"));
+  kivalasztottLefoglal = adat;
+  document.getElementById("lefoglal-original-data").innerHTML =
+    "<p><strong>Anyag azonosító:</strong> " + (adat.avizo_szam || "—") + "</p>" +
+    "<p><strong>Anyag:</strong> " + (adat.anyag_megnevezes || "—") + "</p>" +
+    "<p><strong>Minőség:</strong> " + (adat.anyagminoseg || "—") + "</p>" +
+    "<p><strong>Méret:</strong> " + (adat.meret || "—") + "</p>" +
+    "<p><strong>Mennyiség:</strong> " + (adat.mennyiseg || "—") + " " + (adat.egyseg || "") + "</p>" +
+    "<p><strong>Eredeti munkaszám:</strong> " + (adat.munkaszam || "—") + "</p>";
+  document.getElementById("lf_munkaszam_uj").value = "";
+  document.getElementById("lf_datum_uj").value = "";
+  document.getElementById("lf_megj").value = "";
+  document.getElementById("lefoglal-result").style.display = "none";
+  document.getElementById("lefoglal-error").style.display = "none";
+  document.getElementById("lefoglal-spinner").style.display = "none";
+  navigate("page-lefoglal-detail");
+}
+
+// ============================================================================
+// LEFOGLALÁS — VÉGREHAJTÁS
+// ============================================================================
+async function lefoglalVegrehajt() {
+  if (!kivalasztottLefoglal) return;
+  document.getElementById("lefoglal-error").style.display = "none";
+
+  const munkaszamUj = val("lf_munkaszam_uj");
+  if (!munkaszamUj) {
+    mutatHiba("Add meg a munkaszámot, amire foglalsz!", "lefoglal-error");
+    return;
+  }
+
+  const datumUj = document.getElementById("lf_datum_uj").value;
+  const lehetsegesDatum = datumUj ? datumUj.replace(/-/g, ".") : "";
+
+  const csomag = {
+    nev: bejelentkezettNev,
+    avizo_szam: kivalasztottLefoglal.avizo_szam,
+    lefoglal_munkaszam: munkaszamUj,
+    lehetseges_datum: lehetsegesDatum,
+    megjegyzes: val("lf_megj")
+  };
+
+  document.getElementById("lefoglal-spinner").style.display = "block";
+  try {
+    const res = await api("POST", "/gepszer/lefoglal/vegrehajt", null, csomag);
+    document.getElementById("lefoglal-spinner").style.display = "none";
+    if (res.ok) {
+      document.getElementById("lefoglal-avizo").textContent = res.avizo_szam;
+      document.getElementById("lefoglal-info").textContent =
+        "Foglalta: " + bejelentkezettNev + " · munkaszám: " + munkaszamUj;
+      document.getElementById("lefoglal-result").style.display = "block";
+      kivalasztottLefoglal = null;
+    } else {
+      mutatHiba("Hiba: " + (res.hiba || "ismeretlen"), "lefoglal-error");
+    }
+  } catch (e) {
+    document.getElementById("lefoglal-spinner").style.display = "none";
+    mutatHiba("Kapcsolódási hiba: " + e.message, "lefoglal-error");
+  }
+}
+
+// ============================================================================
+// LEFOGLALÁS — FELOLDÁS
+// ============================================================================
+async function feloldasMegerosit(btn) {
+  const adat = JSON.parse(btn.getAttribute("data-adat"));
+  const ok = confirm(
+    "Biztosan feloldod a foglalást?\n\n" +
+    "Anyag: " + adat.avizo_szam + "\n" +
+    "Foglalta: " + (adat.lefoglalta_nev || "—") + "\n" +
+    "Munkaszámra: " + (adat.lefoglalva_munkaszam || "—") + "\n\n" +
+    "Az anyag visszakerül 'elérhető' státuszba."
+  );
+  if (!ok) return;
+
+  try {
+    const res = await api("POST", "/gepszer/lefoglal/feloldas", null, {
+      nev: bejelentkezettNev,
+      avizo_szam: adat.avizo_szam
+    });
+    if (res.ok) {
+      alert("Foglalás sikeresen feloldva.");
+      keresesLefoglal();
+    } else {
+      alert("Hiba: " + (res.hiba || "ismeretlen"));
+    }
+  } catch (e) {
+    alert("Kapcsolódási hiba: " + e.message);
   }
 }
 </script>
