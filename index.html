@@ -351,6 +351,14 @@ textarea{resize:vertical;min-height:64px}
       </div>
     </div>
     <div id="becsult-ertek-box" style="display:none" class="ertek-box"></div>
+    <div class="field"><label>Tárolási hely</label>
+      <select id="tarhely_maradek">
+        <option value="">— válassz —</option>
+        <option>Gépszer raktár</option><option>Gépszer csőkert</option><option>Gépszer külső tároló</option>
+        <option>Trade külső tároló</option><option>Trade főcsarnok</option><option>Trade forgácsoló</option>
+        <option>Trade raktár konténer</option><option>Trade hozaganyag tároló</option>
+      </select>
+    </div>
     <div class="field"><label>Megjegyzés (opcionális)</label><textarea id="maradek_megj" placeholder="pl. vágási maradék..."></textarea></div>
   </div>
   <button class="btn-stamp" onclick="atbelyeges()">&#127991; Átbélyegzés végrehajtása</button>
@@ -531,6 +539,17 @@ let kivalasztottStamp = null;
 let kivalasztottKivezet = null;
 let kivalasztottLefoglal = null;
 let keresesTalalatok = [];
+
+// Tárolási helyek — legördülő opciók (átvétel + átbélyegzés)
+const TAROLASI_HELYEK = [
+  "Gépszer raktár", "Gépszer csőkert", "Gépszer külső tároló",
+  "Trade külső tároló", "Trade főcsarnok", "Trade forgácsoló",
+  "Trade raktár konténer", "Trade hozaganyag tároló"
+];
+function tarhelyOptions() {
+  return "<option value=''>— válassz —</option>" +
+    TAROLASI_HELYEK.map(h => "<option>" + h + "</option>").join("");
+}
 
 // ============================================================================
 // API SEGÉD — egyetlen async függvény minden kommunikációhoz
@@ -882,6 +901,7 @@ function ujAnyagsor() {
     "<div class='field'><label>Mennyiség</label><input type='number' id='menny_" + id + "' placeholder='500'></div></div>" +
     "<div class='row2'><div class='field narrow'><label>Egység</label><select id='egyseg_" + id + "'><option>kg</option><option>fm</option><option>db</option><option>m2</option><option>t</option></select></div>" +
     "<div class='field'><label>Nettó egységár (Ft)</label><input type='number' id='egysegar_" + id + "' placeholder='pl. 305'></div></div>" +
+    "<div class='field'><label>Tárolási hely</label><select id='tarhely_" + id + "'>" + tarhelyOptions() + "</select></div>" +
     "<div class='row2'><div class='field'><label>Műbizonylat típusa</label><select id='mubiz_tipus_" + id + "'><option value=''>—</option><option>3.1</option><option>3.2</option><option>2.2</option><option>2.1</option></select></div>" +
     "<div class='field'><label>Műbizonylat száma</label><input type='text' id='mubiz_szam_" + id + "' placeholder='pl. MBC-001'></div></div>" +
     "<div class='subsection'>Dokumentáció ellenőrzése</div>" +
@@ -956,7 +976,8 @@ async function kuldes() {
       mubizonylat_megvan: radioVal("mubiz_megvan_" + i), megfelelo: radioVal("megfelelo_" + i),
       ce_jeloles: radioVal("ce_" + i), szemrevetelez: radioVal("szemr_" + i),
       meretellenorzes: radioVal("merete_" + i), jeloles_megvan: radioVal("jeloles_" + i),
-      csomagolas: radioVal("csomagolas_" + i), megjegyzes: val("megj_" + i)
+      csomagolas: radioVal("csomagolas_" + i), megjegyzes: val("megj_" + i),
+      tarolasi_hely: val("tarhely_" + i)
     });
   }
   if (!minoSzam) { mutatHiba("Kérlek adj meg minősítési eredményt!"); return; }
@@ -1062,7 +1083,7 @@ function stampKivalaszt(btn) {
     "<p><strong>Munkaszám:</strong> " + (adat.munkaszam || "—") + "</p>" +
     "<p><strong>Mennyiség:</strong> " + (adat.mennyiseg || "—") + " " + (adat.egyseg || "") + "</p>" +
     "<p><strong>Egységár:</strong> " + (adat.netto_egysegar || "—") + " Ft</p>";
-  ["maradek_meret", "maradek_menny", "maradek_megj"].forEach(id => {
+  ["maradek_meret", "maradek_menny", "maradek_megj", "tarhely_maradek"].forEach(id => {
     document.getElementById(id).value = "";
   });
   document.getElementById("becsult-ertek-box").style.display = "none";
@@ -1104,6 +1125,7 @@ async function atbelyeges() {
     maradek_meret: meret,
     maradek_menny: menny,
     maradek_egyseg: document.getElementById("maradek_egyseg").value,
+    tarolasi_hely: document.getElementById("tarhely_maradek").value,
     megjegyzes: val("maradek_megj"),
     datum: new Date().toISOString().slice(0, 10)
   };
