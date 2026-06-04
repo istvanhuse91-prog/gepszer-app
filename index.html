@@ -260,7 +260,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. 126"></div>
     <div class="field"><label>Szállító neve</label><input type="text" id="s_szallito" placeholder="pl. Globe Metal"></div>
     <div class="field"><label>Munkaszám</label><input type="text" id="s_munkaszam" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)"></div>
-    <div class="field"><label>Várható szállítás (év/hónap)</label><input type="month" id="s_datum"></div>
+    <div class="field"><label>Beérkezés dátuma</label><input type="date" id="s_datum"></div>
     <button class="btn-search" onclick="keresesAtvetel()">Keresés indítása</button>
   </div>
   <div id="atvetel-results"></div>
@@ -327,7 +327,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="field"><label>Anyagminőség</label><input type="text" id="st_minoseg" placeholder="pl. S355J2+N"></div>
     <div class="field"><label>Anyag méret</label><input type="text" id="st_meret" placeholder="pl. 1000x1500x10"></div>
     <div class="field"><label>Anyag megnevezése</label><input type="text" id="st_megnevezes" placeholder="pl. lemez"></div>
-    <div class="field"><label>Szállítás dátuma (év/hónap)</label><input type="month" id="st_datum"></div>
+    <div class="field"><label>Szállítás dátuma</label><input type="date" id="st_datum"></div>
     <button class="btn-search" onclick="keresesStamp()">Keresés indítása</button>
   </div>
   <div id="stamp-results"></div>
@@ -374,7 +374,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="field"><label>Anyagminőség</label><input type="text" id="kv_minoseg" placeholder="pl. S355J2+N"></div>
     <div class="field"><label>Anyag méret</label><input type="text" id="kv_meret" placeholder="pl. 1000x1500x10"></div>
     <div class="field"><label>Anyag megnevezése</label><input type="text" id="kv_megnevezes" placeholder="pl. lemez"></div>
-    <div class="field"><label>Dátum (év/hónap)</label><input type="month" id="kv_datum"></div>
+    <div class="field"><label>Dátum</label><input type="date" id="kv_datum"></div>
     <button class="btn-search" style="background:#8B0000" onclick="keresesKivezet()">Keresés indítása</button>
   </div>
   <div id="kivezet-results"></div>
