@@ -183,6 +183,14 @@ textarea{resize:vertical;min-height:64px}
 .row-action-card .btn-action-feloldas:active{background:#F3E5F5}
 .row-action-card .btn-action-close{background:#eee;color:#555}
 .row-action-card .btn-action-close:active{background:#ddd}
+.anyag-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.anyag-tab{flex:1;min-width:110px;padding:11px 8px;border:2px solid #d8c4e6;background:#fff;color:#7B1FA2;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.anyag-tab.active{background:#7B1FA2;color:#fff;border-color:#7B1FA2}
+.edit-field{margin-bottom:10px}
+.edit-field label{display:block;font-size:12px;font-weight:700;color:#666;margin-bottom:4px}
+.edit-field input,.edit-field select{width:100%;font-size:15px;padding:9px 10px;border:2px solid #ccd3db;border-radius:8px;background:#fafbfc;color:#1a1a1a}
+.edit-field input.locked{background:#eee;color:#999}
+.edit-lock-note{font-size:11px;color:#aaa;margin-top:2px}
 @media (max-width:768px){.tbl-page{padding:10px 4px}.tbl-toolbar{font-size:13px}}
 </style>
 </head>
@@ -243,7 +251,7 @@ textarea{resize:vertical;min-height:64px}
   </button>
   <button class="main-btn btn-lefoglal" onclick="navigate('page-lefoglal-search')">
     <div class="main-btn-icon">&#128204;</div>
-    <div class="main-btn-text"><h3>Maradék anyag</h3><p>Lefoglalás projektre / feloldás</p></div>
+    <div class="main-btn-text"><h3>Anyag áttekintés</h3><p>Nyilvántartás megtekintése és szerkesztése</p></div>
   </button>
   <button class="main-btn btn-kivezet" id="btn-kivezet-home" onclick="navigate('page-kivezet-search')" style="display:none">
     <div class="main-btn-icon">&#9940;</div>
@@ -414,60 +422,25 @@ textarea{resize:vertical;min-height:64px}
 <!-- MARADÉK ANYAG ÁTTEKINTÉS (táblázat) -->
 <div class="page tbl-page" id="page-lefoglal-search">
   <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
-  <div class="section-header" style="background:#7B1FA2"><h2>&#128204; Maradék anyag áttekintés</h2><p>Foglalható és lefoglalt anyagok teljes listája</p></div>
+  <div class="section-header" style="background:#7B1FA2"><h2>&#128202; Anyag áttekintés</h2><p>Nyilvántartás megtekintése és szerkesztése</p></div>
+
+  <div class="anyag-tabs">
+    <button class="anyag-tab active" id="anyagtab-atvetel" onclick="anyagFul('atvetel')">Idegen anyag átvétel</button>
+    <button class="anyag-tab" id="anyagtab-maradek" onclick="anyagFul('maradek')">Maradék anyag</button>
+    <button class="anyag-tab" id="anyagtab-kivezetett" onclick="anyagFul('kivezetett')">Kivezetett</button>
+  </div>
 
   <div class="tbl-toolbar">
-    <button class="tbl-btn-refresh" onclick="attekintesBetolt()">&#10227; Frissítés</button>
-    <button class="tbl-btn-clear" onclick="attekintesSzurokTorles()">Szűrők törlése</button>
-    <div class="tbl-count" id="tbl-count">—</div>
+    <button class="tbl-btn-refresh" onclick="anyagBetolt()">&#10227; Frissítés</button>
+    <button class="tbl-btn-clear" onclick="anyagSzurokTorles()">Szűrők törlése</button>
+    <div class="tbl-count" id="anyag-count">—</div>
   </div>
 
   <div class="tbl-wrap">
-    <table class="tbl" id="attekintes-tbl">
-      <thead>
-        <tr>
-          <th>Azonosító</th>
-          <th>Forrás</th>
-          <th>Megnevezés</th>
-          <th>Méret</th>
-          <th>Minőség</th>
-          <th>Mennyiség</th>
-          <th>Eredeti munkaszám</th>
-          <th>Dátum</th>
-          <th>Egységár</th>
-          <th>Státusz</th>
-          <th>Foglalta</th>
-          <th>Foglalt munkaszám</th>
-        </tr>
-        <tr class="filter-row">
-          <th><input type="text" id="flt-sorsz" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th>
-            <select id="flt-forras" onchange="attekintesSzures()">
-              <option value="">összes</option>
-              <option value="atvetel">Átvétel</option>
-              <option value="maradek">Maradék</option>
-            </select>
-          </th>
-          <th><input type="text" id="flt-megnev" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-meret" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-minoseg" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-mennyiseg" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-munkaszam" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-datum" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-egysegar" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th>
-            <select id="flt-statusz" onchange="attekintesSzures()">
-              <option value="">összes</option>
-              <option value="elerheto">Elérhető</option>
-              <option value="lefoglalva">Lefoglalva</option>
-            </select>
-          </th>
-          <th><input type="text" id="flt-foglalta" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-          <th><input type="text" id="flt-fogl-msz" oninput="attekintesSzures()" placeholder="szűrés..."></th>
-        </tr>
-      </thead>
-      <tbody id="attekintes-tbody">
-        <tr><td colspan="12" class="tbl-loading">&#9203; Betöltés...</td></tr>
+    <table class="tbl" id="anyag-tbl">
+      <thead id="anyag-thead"></thead>
+      <tbody id="anyag-tbody">
+        <tr><td class="tbl-loading">&#9203; Betöltés...</td></tr>
       </tbody>
     </table>
   </div>
@@ -549,6 +522,13 @@ const TAROLASI_HELYEK = [
 function tarhelyOptions() {
   return "<option value=''>— válassz —</option>" +
     TAROLASI_HELYEK.map(h => "<option>" + h + "</option>").join("");
+}
+function tarhelyOptionsSelected(current) {
+  const cur = current || "";
+  return "<option value=''>— válassz —</option>" +
+    TAROLASI_HELYEK.map(h =>
+      "<option" + (h === cur ? " selected" : "") + ">" + h + "</option>"
+    ).join("");
 }
 
 // ============================================================================
@@ -719,7 +699,7 @@ function navigate(pageId) {
   window.scrollTo(0, 0);
   // Áttekintés oldal megnyitásakor automatikusan friss adatokat töltünk
   if (pageId === "page-lefoglal-search") {
-    attekintesBetolt();
+    anyagBetolt();
   }
 }
 
@@ -1252,216 +1232,218 @@ async function kivezetVegrehajt() {
 // ============================================================================
 // ÁTTEKINTÉS — TÁBLÁZAT BETÖLTÉS ÉS SZŰRÉS
 // ============================================================================
-let attekintesAdatok = [];
+// ============================================================================
+// ANYAG ÁTTEKINTÉS — háromfüles, dinamikus, szerkeszthető tábla
+// ============================================================================
+const ANYAG_LAPOK = {
+  atvetel:    { url: "/gepszer/atvetel/lista",    lock: ["Anyag azonosító"] },
+  maradek:    { url: "/gepszer/maradek/lista",    lock: ["Azonosító", "Eredeti anyag azonosító"] },
+  kivezetett: { url: "/gepszer/kivezetett/lista", lock: ["Azonosító", "Eredeti anyag azonosító"] }
+};
+let anyagAktivFul = "atvetel";
+let anyagOszlopok = [];
+let anyagAdatok = [];
 
-async function attekintesBetolt() {
-  const tbody = document.getElementById("attekintes-tbody");
-  tbody.innerHTML = "<tr><td colspan='12' class='tbl-loading'>&#9203; Betöltés...</td></tr>";
-  document.getElementById("tbl-count").textContent = "—";
+function anyagFul(ful) {
+  anyagAktivFul = ful;
+  ["atvetel", "maradek", "kivezetett"].forEach(f => {
+    const b = document.getElementById("anyagtab-" + f);
+    if (b) b.classList.toggle("active", f === ful);
+  });
+  anyagBetolt();
+}
+
+async function anyagBetolt() {
+  const cfg = ANYAG_LAPOK[anyagAktivFul];
+  const thead = document.getElementById("anyag-thead");
+  const tbody = document.getElementById("anyag-tbody");
+  const countEl = document.getElementById("anyag-count");
+  thead.innerHTML = "";
+  tbody.innerHTML = "<tr><td class='tbl-loading'>&#9203; Betöltés...</td></tr>";
+  countEl.textContent = "—";
   try {
-    const res = await api("GET", "/gepszer/attekintes");
+    const res = await api("GET", cfg.url);
     if (!res.ok || !Array.isArray(res.adatok)) {
-      tbody.innerHTML = "<tr><td colspan='12' class='tbl-empty-state'>Hiba: " + (res.hiba || "ismeretlen") + "</td></tr>";
+      tbody.innerHTML = "<tr><td class='tbl-empty-state'>Hiba: " + (res.hiba || "ismeretlen") + "</td></tr>";
       return;
     }
-    attekintesAdatok = res.adatok;
-    attekintesRender(attekintesAdatok);
+    anyagOszlopok = res.oszlopok || [];
+    anyagAdatok = res.adatok || [];
+    anyagFejlec();
+    anyagRender(anyagAdatok);
   } catch (e) {
-    tbody.innerHTML = "<tr><td colspan='12' class='tbl-empty-state'>Kapcsolódási hiba: " + e.message + "</td></tr>";
+    tbody.innerHTML = "<tr><td class='tbl-empty-state'>Kapcsolódási hiba: " + e.message + "</td></tr>";
   }
 }
 
-function attekintesRender(lista) {
-  const tbody = document.getElementById("attekintes-tbody");
-  const countEl = document.getElementById("tbl-count");
-
-  if (!lista.length) {
-    tbody.innerHTML = "<tr><td colspan='12' class='tbl-empty-state'>Nincs találat a szűrőfeltételekkel.</td></tr>";
-    countEl.textContent = "0 / " + attekintesAdatok.length + " sor";
-    return;
-  }
-
-  // Maximum 100 sor egyszerre — felül a többi
-  const megjelenitendo = lista.slice(0, 100);
-  let html = "";
-  megjelenitendo.forEach((t, idx) => {
-    const isMaradek = t.forras === "maradek";
-    const isLefoglalva = t.statusz === "LEFOGLALVA";
-    const rowClass = isLefoglalva ? "row-lefoglalva" : (isMaradek ? "row-maradek" : "");
-    const forrasBadge = isMaradek
-      ? "<span class='badge-forras-mar'>&#9855; Maradék</span>"
-      : "<span class='badge-forras-atv'>&#128230; Átvétel</span>";
-    const statuszBadge = isLefoglalva
-      ? "<span class='badge-st-lefoglalva'>&#128204; LEFOGLALVA</span>"
-      : (isMaradek ? "<span class='badge-st-aktiv'>&#10003; ELÉRHETŐ</span>" : "<span class='badge-st-aktiv'>&#10003; ELÉRHETŐ</span>");
-
-    const empty = "<span class='empty'>—</span>";
-
-    html +=
-      "<tr class='" + rowClass + "' data-idx='" + idx + "' onclick='attekintesSorraKattint(" + idx + ")'>" +
-      "<td class='col-sorsz'>" + (t.avizo_szam || empty) + "</td>" +
-      "<td>" + forrasBadge + "</td>" +
-      "<td>" + (t.anyag_megnevezes || empty) + "</td>" +
-      "<td>" + (t.meret || empty) + "</td>" +
-      "<td>" + (t.anyagminoseg || empty) + "</td>" +
-      "<td class='col-num'>" + (t.mennyiseg || "") + " " + (t.egyseg || "") + "</td>" +
-      "<td>" + (t.munkaszam || empty) + "</td>" +
-      "<td>" + (t.datum || empty) + "</td>" +
-      "<td class='col-num'>" + (t.netto_egysegar ? t.netto_egysegar + " Ft" : empty) + "</td>" +
-      "<td>" + statuszBadge + "</td>" +
-      "<td>" + (t.lefoglalta_nev || empty) + "</td>" +
-      "<td>" + (t.lefoglalva_munkaszam || empty) + "</td>" +
-      "</tr>";
+function anyagFejlec() {
+  const thead = document.getElementById("anyag-thead");
+  let fej = "<tr>";
+  anyagOszlopok.forEach(c => { fej += "<th>" + c + "</th>"; });
+  fej += "</tr><tr class='filter-row'>";
+  anyagOszlopok.forEach((c, i) => {
+    fej += "<th><input type='text' data-col='" + i + "' oninput='anyagSzures()' placeholder='szűrés...'></th>";
   });
-  tbody.innerHTML = html;
-
-  if (lista.length > 100) {
-    countEl.textContent = "100 / " + lista.length + " sor (szűkítsd a szűrőket)";
-  } else {
-    countEl.textContent = lista.length + " / " + attekintesAdatok.length + " sor";
-  }
+  fej += "</tr>";
+  thead.innerHTML = fej;
 }
 
-function attekintesSzures() {
-  const fSorsz = document.getElementById("flt-sorsz").value.toLowerCase();
-  const fForras = document.getElementById("flt-forras").value;
-  const fMegnev = document.getElementById("flt-megnev").value.toLowerCase();
-  const fMeret = document.getElementById("flt-meret").value.toLowerCase();
-  const fMinoseg = document.getElementById("flt-minoseg").value.toLowerCase();
-  const fMennyiseg = document.getElementById("flt-mennyiseg").value.toLowerCase();
-  const fMunkaszam = document.getElementById("flt-munkaszam").value.toLowerCase();
-  const fDatum = document.getElementById("flt-datum").value.toLowerCase();
-  const fEgysegar = document.getElementById("flt-egysegar").value.toLowerCase();
-  const fStatusz = document.getElementById("flt-statusz").value;
-  const fFoglalta = document.getElementById("flt-foglalta").value.toLowerCase();
-  const fFoglMsz = document.getElementById("flt-fogl-msz").value.toLowerCase();
-
-  const szurt = attekintesAdatok.filter(t => {
-    if (fSorsz && !String(t.avizo_szam).toLowerCase().includes(fSorsz)) return false;
-    if (fForras && t.forras !== fForras) return false;
-    if (fMegnev && !String(t.anyag_megnevezes).toLowerCase().includes(fMegnev)) return false;
-    if (fMeret && !String(t.meret).toLowerCase().includes(fMeret)) return false;
-    if (fMinoseg && !String(t.anyagminoseg).toLowerCase().includes(fMinoseg)) return false;
-    if (fMennyiseg) {
-      const mennySorString = (String(t.mennyiseg) + " " + String(t.egyseg)).toLowerCase();
-      if (!mennySorString.includes(fMennyiseg)) return false;
+function anyagSzures() {
+  const inputs = document.querySelectorAll("#anyag-thead .filter-row input");
+  const fltk = {};
+  inputs.forEach(inp => {
+    const v = inp.value.trim().toLowerCase();
+    if (v) fltk[inp.getAttribute("data-col")] = v;
+  });
+  const szurt = anyagAdatok.filter(sor => {
+    for (const ci in fltk) {
+      const col = anyagOszlopok[ci];
+      const cella = String(sor[col] === undefined || sor[col] === null ? "" : sor[col]).toLowerCase();
+      if (!cella.includes(fltk[ci])) return false;
     }
-    if (fMunkaszam && !String(t.munkaszam).toLowerCase().includes(fMunkaszam)) return false;
-    if (fDatum && !String(t.datum).toLowerCase().includes(fDatum)) return false;
-    if (fEgysegar && !String(t.netto_egysegar).toLowerCase().includes(fEgysegar)) return false;
-    if (fStatusz) {
-      const isLef = t.statusz === "LEFOGLALVA";
-      if (fStatusz === "lefoglalva" && !isLef) return false;
-      if (fStatusz === "elerheto" && isLef) return false;
-    }
-    if (fFoglalta && !String(t.lefoglalta_nev).toLowerCase().includes(fFoglalta)) return false;
-    if (fFoglMsz && !String(t.lefoglalva_munkaszam).toLowerCase().includes(fFoglMsz)) return false;
     return true;
   });
-
-  attekintesRender(szurt);
+  anyagRender(szurt);
 }
 
-function attekintesSzurokTorles() {
-  ["flt-sorsz","flt-megnev","flt-meret","flt-minoseg","flt-mennyiseg",
-   "flt-munkaszam","flt-datum","flt-egysegar","flt-foglalta","flt-fogl-msz"].forEach(id => {
-    const e = document.getElementById(id); if (e) e.value = "";
-  });
-  document.getElementById("flt-forras").value = "";
-  document.getElementById("flt-statusz").value = "";
-  attekintesRender(attekintesAdatok);
+function anyagSzurokTorles() {
+  document.querySelectorAll("#anyag-thead .filter-row input").forEach(i => i.value = "");
+  anyagRender(anyagAdatok);
 }
 
-function attekintesSorraKattint(idx) {
-  const t = attekintesAdatok[idx];
-  if (!t) return;
-
-  const isAtvetel = t.forras === "atvetel";
-  const isLefoglalva = t.statusz === "LEFOGLALVA";
-
-  // Az átvételi anyagokat NEM lehet foglalni (csak átbélyegzés után jönnek létre a maradékok)
-  // — ezért rájuk csak információs panel jelenik meg
-  const cim = isAtvetel
-    ? "Átvételi anyag — információ"
-    : (isLefoglalva ? "Lefoglalt maradék — műveletek" : "Maradék anyag — műveletek");
-
-  document.getElementById("row-action-title").textContent = cim;
-
-  const detail =
-    "<strong>Azonosító:</strong> " + (t.avizo_szam || "—") + "<br>" +
-    "<strong>Anyag:</strong> " + (t.anyag_megnevezes || "—") + "<br>" +
-    "<strong>Minőség:</strong> " + (t.anyagminoseg || "—") + "<br>" +
-    "<strong>Méret:</strong> " + (t.meret || "—") + "<br>" +
-    "<strong>Mennyiség:</strong> " + (t.mennyiseg || "—") + " " + (t.egyseg || "") + "<br>" +
-    "<strong>Eredeti munkaszám:</strong> " + (t.munkaszam || "—") +
-    (isLefoglalva
-      ? "<br><br><strong>Foglalta:</strong> " + (t.lefoglalta_nev || "—") +
-        "<br><strong>Foglalt munkaszámra:</strong> " + (t.lefoglalva_munkaszam || "—") +
-        (t.lehetseges_datum ? "<br><strong>Várható felhasználás:</strong> " + t.lehetseges_datum : "")
-      : "");
-
-  document.getElementById("row-action-detail").innerHTML = detail;
-
-  let gombokHtml = "";
-  if (isAtvetel) {
-    // Csak informativan, foglalni nem lehet (átvételi anyag = még darabolatlan)
-    gombokHtml = "<button class='btn-action-close' onclick='rowActionClose()'>Bezár</button>";
-  } else if (isLefoglalva) {
-    gombokHtml =
-      "<button class='btn-action-feloldas' onclick='attekintesFeloldas(" + idx + ")'>&#10227; Foglalás feloldása</button>" +
-      "<button class='btn-action-close' onclick='rowActionClose()'>Bezár</button>";
-  } else {
-    // AKTÍV maradék — foglalható
-    gombokHtml =
-      "<button class='btn-action-foglal' onclick='attekintesLefoglal(" + idx + ")'>&#128204; Lefoglalás</button>" +
-      "<button class='btn-action-close' onclick='rowActionClose()'>Bezár</button>";
+function anyagRender(lista) {
+  const tbody = document.getElementById("anyag-tbody");
+  const countEl = document.getElementById("anyag-count");
+  const oszlopCount = anyagOszlopok.length || 1;
+  if (!lista.length) {
+    tbody.innerHTML = "<tr><td colspan='" + oszlopCount + "' class='tbl-empty-state'>Nincs találat.</td></tr>";
+    countEl.textContent = "0 / " + anyagAdatok.length + " sor";
+    return;
   }
-  document.getElementById("row-action-buttons").innerHTML = gombokHtml;
+  const megj = lista.slice(0, 100);
+  let html = "";
+  megj.forEach(sor => {
+    const realIdx = anyagAdatok.indexOf(sor);
+    html += "<tr onclick='anyagSorKattint(" + realIdx + ")'>";
+    anyagOszlopok.forEach(c => {
+      const ures = (sor[c] === undefined || sor[c] === null || sor[c] === "");
+      html += "<td>" + (ures ? "<span class='empty'>—</span>" : sor[c]) + "</td>";
+    });
+    html += "</tr>";
+  });
+  tbody.innerHTML = html;
+  countEl.textContent = (lista.length > 100
+    ? "100 / " + lista.length + " sor (szűkíts a szűrőkkel)"
+    : lista.length + " / " + anyagAdatok.length + " sor");
+}
+
+function anyagSorKattint(idx) {
+  const sor = anyagAdatok[idx];
+  if (!sor) return;
+  const cfg = ANYAG_LAPOK[anyagAktivFul];
+  const azonosito = sor["Anyag azonosító"] || sor["Azonosító"] || "—";
+  document.getElementById("row-action-title").textContent = "Tétel szerkesztése — " + azonosito;
+
+  let mezok = "";
+  anyagOszlopok.forEach((c, i) => {
+    const ertek = (sor[c] === undefined || sor[c] === null) ? "" : String(sor[c]);
+    const safe = ertek.replace(/"/g, "&quot;");
+    const zarolt = cfg.lock.indexOf(c) !== -1;
+    if (c === "Tárolási hely") {
+      mezok += "<div class='edit-field'><label>" + c + "</label><select data-ekey='" + i + "'>" + tarhelyOptionsSelected(ertek) + "</select></div>";
+    } else if (zarolt) {
+      mezok += "<div class='edit-field'><label>" + c + " &#128274;</label><input type='text' class='locked' value=\"" + safe + "\" readonly><div class='edit-lock-note'>zárolt — nem módosítható</div></div>";
+    } else {
+      mezok += "<div class='edit-field'><label>" + c + "</label><input type='text' data-ekey='" + i + "' value=\"" + safe + "\"></div>";
+    }
+  });
+  document.getElementById("row-action-detail").innerHTML = mezok;
+
+  let gombok = "<button class='btn-action-foglal' onclick='anyagMent(" + idx + ")'>&#128190; Mentés</button>";
+  if (anyagAktivFul === "maradek") {
+    const st = String(sor["Státusz"] || "").trim();
+    if (st === "AKTÍV") {
+      gombok += "<button class='btn-action-feloldas' onclick='anyagLefoglal(" + idx + ")'>&#128204; Lefoglalás</button>";
+    } else if (st === "LEFOGLALVA") {
+      gombok += "<button class='btn-action-feloldas' onclick='anyagFeloldas(" + idx + ")'>&#10227; Feloldás</button>";
+    }
+  }
+  gombok += "<button class='btn-action-close' onclick='rowActionClose()'>Bezár</button>";
+  document.getElementById("row-action-buttons").innerHTML = gombok;
   document.getElementById("row-action-modal").classList.add("show");
 }
 
-function rowActionClose(evt) {
-  // Modal háttérre kattintva is bezárul (csak akkor, ha a háttérre kattintottunk, nem a kártyára)
-  if (evt && evt.target.id !== "row-action-modal") return;
-  document.getElementById("row-action-modal").classList.remove("show");
-}
-
-function attekintesLefoglal(idx) {
-  const t = attekintesAdatok[idx];
-  if (!t) return;
-  rowActionClose();
-  // A meglévő lefoglalKivalaszt függvényt hívjuk meg, csak a button-helyettesítő trükkel
-  const fakeBtn = { getAttribute: () => JSON.stringify(t) };
-  lefoglalKivalaszt(fakeBtn);
-}
-
-async function attekintesFeloldas(idx) {
-  const t = attekintesAdatok[idx];
-  if (!t) return;
-  const ok = confirm(
-    "Biztosan feloldod a foglalást?\n\n" +
-    "Anyag: " + t.avizo_szam + "\n" +
-    "Foglalta: " + (t.lefoglalta_nev || "—") + "\n" +
-    "Munkaszámra: " + (t.lefoglalva_munkaszam || "—") + "\n\n" +
-    "Az anyag visszakerül 'elérhető' státuszba."
-  );
-  if (!ok) return;
-
+async function anyagMent(idx) {
+  const sor = anyagAdatok[idx];
+  if (!sor) return;
+  const cfg = ANYAG_LAPOK[anyagAktivFul];
+  const valtozott = {};
+  document.querySelectorAll("#row-action-detail [data-ekey]").forEach(el => {
+    const col = anyagOszlopok[el.getAttribute("data-ekey")];
+    if (!col || cfg.lock.indexOf(col) !== -1) return;
+    const uj = el.value;
+    const regi = (sor[col] === undefined || sor[col] === null) ? "" : String(sor[col]);
+    if (String(uj) !== regi) valtozott[col] = uj;
+  });
+  if (!Object.keys(valtozott).length) { alert("Nincs módosítás."); return; }
   try {
-    const res = await api("POST", "/gepszer/lefoglal/feloldas", null, {
+    const res = await api("POST", "/gepszer/anyag/modosit", null, {
       nev: bejelentkezettNev,
-      avizo_szam: t.avizo_szam
+      lap: anyagAktivFul,
+      row_number: sor.row_number,
+      mezok: valtozott
     });
     if (res.ok) {
       rowActionClose();
-      alert("Foglalás sikeresen feloldva.");
-      attekintesBetolt(); // újratölt
+      alert("Mentve — " + Object.keys(valtozott).length + " mező frissítve.");
+      anyagBetolt();
     } else {
       alert("Hiba: " + (res.hiba || "ismeretlen"));
     }
   } catch (e) {
     alert("Kapcsolódási hiba: " + e.message);
   }
+}
+
+function anyagLefoglal(idx) {
+  const sor = anyagAdatok[idx];
+  if (!sor) return;
+  rowActionClose();
+  const adapt = {
+    avizo_szam: sor["Azonosító"] || "",
+    anyag_megnevezes: sor["Anyag megnevezése"] || "",
+    anyagminoseg: sor["Anyagminőség"] || "",
+    meret: sor["Maradék méret"] || sor["Méret"] || "",
+    mennyiseg: sor["Mennyiség"] || "",
+    egyseg: sor["Egység"] || "",
+    munkaszam: sor["Munkaszám"] || ""
+  };
+  const fakeBtn = { getAttribute: () => JSON.stringify(adapt) };
+  lefoglalKivalaszt(fakeBtn);
+}
+
+async function anyagFeloldas(idx) {
+  const sor = anyagAdatok[idx];
+  if (!sor) return;
+  const azon = sor["Azonosító"] || "";
+  const ok = confirm(
+    "Biztosan feloldod a foglalást?\n\n" +
+    "Anyag: " + azon + "\n" +
+    "Foglalta: " + (sor["Lefoglalta (név)"] || "—") + "\n" +
+    "Munkaszámra: " + (sor["Lefoglalva - Munkaszám"] || "—") + "\n\n" +
+    "Az anyag visszakerül 'elérhető' státuszba."
+  );
+  if (!ok) return;
+  try {
+    const res = await api("POST", "/gepszer/lefoglal/feloldas", null, { nev: bejelentkezettNev, avizo_szam: azon });
+    if (res.ok) { rowActionClose(); alert("Foglalás feloldva."); anyagBetolt(); }
+    else alert("Hiba: " + (res.hiba || "ismeretlen"));
+  } catch (e) { alert("Kapcsolódási hiba: " + e.message); }
+}
+
+function rowActionClose(evt) {
+  if (evt && evt.target.id !== "row-action-modal") return;
+  document.getElementById("row-action-modal").classList.remove("show");
 }
 
 function lefoglalKivalaszt(btn) {
@@ -1518,7 +1500,7 @@ async function lefoglalVegrehajt() {
       document.getElementById("lefoglal-result").style.display = "block";
       kivalasztottLefoglal = null;
       // Az áttekintés tábla frissítése a háttérben, hogy ha visszamegyünk, ne legyen elavult
-      attekintesBetolt();
+      anyagBetolt();
     } else {
       mutatHiba("Hiba: " + (res.hiba || "ismeretlen"), "lefoglal-error");
     }
@@ -1549,7 +1531,7 @@ async function feloldasMegerosit(btn) {
     });
     if (res.ok) {
       alert("Foglalás sikeresen feloldva.");
-      attekintesBetolt();
+      anyagBetolt();
     } else {
       alert("Hiba: " + (res.hiba || "ismeretlen"));
     }
