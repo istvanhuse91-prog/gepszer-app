@@ -191,6 +191,17 @@ textarea{resize:vertical;min-height:64px}
 .edit-field input,.edit-field select{width:100%;font-size:15px;padding:9px 10px;border:2px solid #ccd3db;border-radius:8px;background:#fafbfc;color:#1a1a1a}
 .edit-field input.locked{background:#eee;color:#999}
 .edit-lock-note{font-size:11px;color:#aaa;margin-top:2px}
+.btn-dok{background:#00897B;color:#fff;box-shadow:0 4px 16px rgba(0,137,123,0.25)}
+.btn-dok .main-btn-icon{background:rgba(255,255,255,0.18)}
+.dok-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.dok-thumb{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid #ccd3db}
+.dok-thumb img{width:100%;height:100%;object-fit:cover}
+.dok-thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border:none;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;font-size:12px;cursor:pointer;line-height:1;padding:0}
+.dok-doc{background:#fff;border:2px solid #e0e8f0;border-radius:10px;padding:12px;margin-bottom:8px}
+.dok-doc h4{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;word-break:break-all}
+.dok-doc p{font-size:13px;color:#666;line-height:1.5}
+.dok-doc a{color:#00897B;font-weight:700;text-decoration:none}
+.dok-doc.torolve{opacity:0.55}
 @media (max-width:768px){.tbl-page{padding:10px 4px}.tbl-toolbar{font-size:13px}}
 </style>
 </head>
@@ -252,6 +263,10 @@ textarea{resize:vertical;min-height:64px}
   <button class="main-btn btn-lefoglal" onclick="navigate('page-lefoglal-search')">
     <div class="main-btn-icon">&#128204;</div>
     <div class="main-btn-text"><h3>Anyag áttekintés</h3><p>Nyilvántartás megtekintése és szerkesztése</p></div>
+  </button>
+  <button class="main-btn btn-dok" onclick="navigate('page-dok')">
+    <div class="main-btn-icon">&#128247;</div>
+    <div class="main-btn-text"><h3>Dokumentumok</h3><p>Szállítólevél / számla feltöltése és keresése</p></div>
   </button>
   <button class="main-btn btn-kivezet" id="btn-kivezet-home" onclick="navigate('page-kivezet-search')" style="display:none">
     <div class="main-btn-icon">&#9940;</div>
@@ -492,6 +507,47 @@ textarea{resize:vertical;min-height:64px}
   <div class="error-box" id="lefoglal-error"></div>
 </div>
 
+<!-- DOKUMENTUMOK -->
+<div class="page" id="page-dok">
+  <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
+  <div class="section-header" style="background:#00897B"><h2>&#128247; Dokumentumok</h2><p>Szállítólevél / számla feltöltése és keresése</p></div>
+
+  <div class="card">
+    <div class="card-title">Új dokumentum feltöltése</div>
+    <div class="field"><label>Munkaszám</label><input type="text" id="dok_munkaszam" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)"></div>
+    <div class="field"><label>Szállító</label><input type="text" id="dok_szallito" placeholder="pl. Globe Metal"></div>
+    <div class="field"><label>Szállítólevél szám</label><input type="text" id="dok_szallitolevel" placeholder="pl. SL-2026-0441"></div>
+    <div class="field"><label>Dátum</label><input type="date" id="dok_datum"></div>
+    <div class="field"><label>Típus</label>
+      <select id="dok_tipus"><option>szállítólevél</option><option>számla</option><option>egyéb</option></select>
+    </div>
+    <div class="field">
+      <label>Fénykép(ek)</label>
+      <input type="file" id="dok_fajl" accept="image/*" capture="environment" multiple onchange="dokFotoValaszt(this)">
+    </div>
+    <div id="dok-thumbs" class="dok-thumbs"></div>
+    <button class="btn-send" id="dok-feltolt-btn" style="background:#00897B" onclick="dokFeltolt()">&#128228; Feltöltés</button>
+    <div class="spinner" id="dok-spinner">&#9203; Feltöltés folyamatban...</div>
+    <div class="result-box" id="dok-result" style="background:#E0F2F1;border-color:#80CBC4">
+      <div class="result-label" style="color:#00695C" id="dok-result-text"></div>
+    </div>
+    <div class="error-box" id="dok-error"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Keresés a dokumentumok közt</div>
+    <div class="field"><label>Munkaszám</label><input type="text" id="dks_munkaszam" oninput="dokKeres()" placeholder="szűrés..."></div>
+    <div class="field"><label>Szállító</label><input type="text" id="dks_szallito" oninput="dokKeres()" placeholder="szűrés..."></div>
+    <div class="field"><label>Szállítólevél szám</label><input type="text" id="dks_szallitolevel" oninput="dokKeres()" placeholder="szűrés..."></div>
+    <div class="row2">
+      <div class="field"><label>Dátum</label><input type="text" id="dks_datum" oninput="dokKeres()" placeholder="pl. 2026.06"></div>
+      <div class="field"><label>Típus</label><select id="dks_tipus" onchange="dokKeres()"><option value="">összes</option><option>szállítólevél</option><option>számla</option><option>egyéb</option></select></div>
+    </div>
+    <button class="btn-search" style="background:#00897B" onclick="dokBetolt()">&#10227; Lista frissítése</button>
+    <div id="dok-results" style="margin-top:12px"></div>
+  </div>
+</div>
+
 <script>
 // ============================================================================
 // KONFIGURÁCIÓ
@@ -700,6 +756,11 @@ function navigate(pageId) {
   // Áttekintés oldal megnyitásakor automatikusan friss adatokat töltünk
   if (pageId === "page-lefoglal-search") {
     anyagBetolt();
+  }
+  if (pageId === "page-dok") {
+    const dd = document.getElementById("dok_datum");
+    if (dd && !dd.value) dd.value = new Date().toISOString().slice(0, 10);
+    dokBetolt();
   }
 }
 
@@ -1538,6 +1599,136 @@ async function feloldasMegerosit(btn) {
   } catch (e) {
     alert("Kapcsolódási hiba: " + e.message);
   }
+}
+
+// ============================================================================
+// DOKUMENTUMOK MODUL — fotó (tömörítve) feltöltés + keresés
+// ============================================================================
+let dokFotok = [];
+let dokAdatok = [];
+
+function kepTomorit(file, maxMeret, minoseg) {
+  maxMeret = maxMeret || 1600; minoseg = minoseg || 0.7;
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        let w = img.width, h = img.height;
+        if (w > maxMeret || h > maxMeret) {
+          if (w >= h) { h = Math.round(h * maxMeret / w); w = maxMeret; }
+          else { w = Math.round(w * maxMeret / h); h = maxMeret; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", minoseg));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function dokFotoValaszt(input) {
+  const files = Array.from(input.files || []);
+  for (const f of files) {
+    try { const b64 = await kepTomorit(f); dokFotok.push({ base64: b64 }); } catch (e) {}
+  }
+  input.value = "";
+  dokThumbsRender();
+}
+
+function dokThumbsRender() {
+  document.getElementById("dok-thumbs").innerHTML = dokFotok.map(function (f, i) {
+    return "<div class='dok-thumb'><img src='" + f.base64 + "'><button onclick='dokFotoTorol(" + i + ")'>&#10005;</button></div>";
+  }).join("");
+}
+function dokFotoTorol(i) { dokFotok.splice(i, 1); dokThumbsRender(); }
+
+async function dokFeltolt() {
+  document.getElementById("dok-error").style.display = "none";
+  document.getElementById("dok-result").style.display = "none";
+  const munkaszam = val("dok_munkaszam");
+  const szallito = val("dok_szallito");
+  if (!dokFotok.length) { mutatHiba("Adj hozzá legalább egy fényképet!", "dok-error"); return; }
+  if (!munkaszam && !szallito) { mutatHiba("Adj meg legalább munkaszámot vagy szállítót!", "dok-error"); return; }
+  const meta = {
+    nev: bejelentkezettNev, munkaszam: munkaszam, szallito: szallito,
+    szallitolevel: val("dok_szallitolevel"), datum: val("dok_datum"),
+    tipus: document.getElementById("dok_tipus").value
+  };
+  document.getElementById("dok-spinner").style.display = "block";
+  document.getElementById("dok-feltolt-btn").disabled = true;
+  let siker = 0;
+  try {
+    for (let i = 0; i < dokFotok.length; i++) {
+      const res = await api("POST", "/gepszer/dokumentum/feltolt", null,
+        Object.assign({}, meta, { sorszam: i + 1, kep_base64: dokFotok[i].base64 }));
+      if (res.ok) siker++;
+    }
+    document.getElementById("dok-spinner").style.display = "none";
+    document.getElementById("dok-feltolt-btn").disabled = false;
+    document.getElementById("dok-result-text").textContent = siker + " fénykép feltöltve.";
+    document.getElementById("dok-result").style.display = "block";
+    dokFotok = []; dokThumbsRender();
+    dokBetolt();
+  } catch (e) {
+    document.getElementById("dok-spinner").style.display = "none";
+    document.getElementById("dok-feltolt-btn").disabled = false;
+    mutatHiba("Kapcsolódási hiba: " + e.message, "dok-error");
+  }
+}
+
+async function dokBetolt() {
+  const cont = document.getElementById("dok-results");
+  cont.innerHTML = "<div class='spinner' style='display:block'>&#9203; Betöltés...</div>";
+  try {
+    const res = await api("GET", "/gepszer/dokumentum/lista");
+    dokAdatok = (res.ok && Array.isArray(res.adatok)) ? res.adatok : [];
+    dokKeres();
+  } catch (e) {
+    cont.innerHTML = "<div class='error-box' style='display:block'>Kapcsolódási hiba: " + e.message + "</div>";
+  }
+}
+
+function dokKeres() {
+  const fm = val("dks_munkaszam").toLowerCase();
+  const fsz = val("dks_szallito").toLowerCase();
+  const fsl = val("dks_szallitolevel").toLowerCase();
+  const fd = val("dks_datum").toLowerCase();
+  const ft = document.getElementById("dks_tipus").value;
+  const szurt = dokAdatok.filter(function (d) {
+    if (fm && !String(d["Munkaszám"] || "").toLowerCase().includes(fm)) return false;
+    if (fsz && !String(d["Szállító"] || "").toLowerCase().includes(fsz)) return false;
+    if (fsl && !String(d["Szállítólevél szám"] || "").toLowerCase().includes(fsl)) return false;
+    if (fd && !String(d["Dátum"] || "").toLowerCase().includes(fd)) return false;
+    if (ft && String(d["Típus"] || "") !== ft) return false;
+    return true;
+  });
+  dokRender(szurt);
+}
+
+function dokRender(lista) {
+  const cont = document.getElementById("dok-results");
+  if (!lista.length) {
+    cont.innerHTML = "<div class='card' style='text-align:center;color:#888;padding:16px'>Nincs dokumentum a feltételekkel.</div>";
+    return;
+  }
+  cont.innerHTML = lista.slice(0, 100).map(function (d) {
+    const torolt = String(d["Státusz"] || "") !== "AKTÍV";
+    const link = (!torolt && d["Drive link"])
+      ? "<a href='" + d["Drive link"] + "' target='_blank'>&#128196; Megnyitás</a>"
+      : "<span style='color:#999'>(törölve)</span>";
+    return "<div class='dok-doc" + (torolt ? " torolve" : "") + "'>" +
+      "<h4>" + (d["Fájlnév"] || "—") + "</h4>" +
+      "<p>Munkaszám: " + (d["Munkaszám"] || "—") + " &nbsp;|&nbsp; Szállító: " + (d["Szállító"] || "—") + "</p>" +
+      "<p>Szállítólevél: " + (d["Szállítólevél szám"] || "—") + " &nbsp;|&nbsp; Típus: " + (d["Típus"] || "—") + " &nbsp;|&nbsp; " + (d["Dátum"] || "—") + "</p>" +
+      "<p>Feltöltötte: " + (d["Feltöltő"] || "—") + " · " + (d["Feltöltés ideje"] || "—") + " · " + link + "</p>" +
+      "</div>";
+  }).join("");
 }
 </script>
 </body>
