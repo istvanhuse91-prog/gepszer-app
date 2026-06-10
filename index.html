@@ -36,6 +36,12 @@ html,body{height:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:
 .section-header{background:#0380C6;color:#fff;border-radius:12px;padding:18px;margin-bottom:20px}
 .section-header h2{font-size:21px;font-weight:700;margin-bottom:3px}
 .section-header p{font-size:14px;opacity:0.85}
+/* === GYORSÁTVÉTEL — rejtett trigger a kék sáv jobb oldalán === */
+.section-header.gyors-host{display:flex;align-items:center;gap:12px}
+.section-header.gyors-host .gyors-host-text{flex:1;min-width:0}
+.gyors-trigger{flex-shrink:0;background:rgba(255,255,255,0.20);border:none;color:#fff;min-width:56px;height:50px;padding:0 14px;border-radius:10px;font-size:22px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;gap:6px}
+.gyors-trigger:active{background:rgba(255,255,255,0.38)}
+.gyors-trigger .gyors-trigger-txt{font-size:13px;font-weight:700;letter-spacing:0.03em}
 .card{background:#fff;border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid #dde3e8}
 .card-title{font-size:12px;font-weight:700;color:#0380C6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e8f0f8}
 .field{margin-bottom:14px}
@@ -277,7 +283,10 @@ textarea{resize:vertical;min-height:64px}
 <!-- ÁTVÉTEL KERESÉS -->
 <div class="page" id="page-atvetel-search">
   <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
-  <div class="section-header"><h2>&#128230; Anyag átvétel</h2><p>Adja meg a keresési feltételeket</p></div>
+  <div class="section-header gyors-host" id="atvetel-section-header">
+    <div class="gyors-host-text"><h2>&#128230; Anyag átvétel</h2><p>Adja meg a keresési feltételeket</p></div>
+    <button class="gyors-trigger" id="gyors-trigger" onclick="gyorsAtvetelNyit()" title="Gyorsátvétel a kijelölt tételekre" aria-label="Gyorsátvétel">&#9889;<span class="gyors-trigger-txt">Gyors</span></button>
+  </div>
   <div class="search-box">
     <div class="search-title">&#128269; Keresés megrendelésben</div>
     <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. 126"></div>
@@ -302,11 +311,8 @@ textarea{resize:vertical;min-height:64px}
     <div class="field"><label>Szállító neve</label><input type="text" id="szallito" placeholder="pl. Globe Metal"></div>
     <div class="field"><label>Szállítólevél szám</label><input type="text" id="szallitolevel_szam" placeholder="pl. SL-2026-0441"></div>
     <div class="field"><label>Átvevő neve</label>
-      <select id="atvevo">
-        <option value="">— válassz —</option>
-        <option>Kriszt Antal</option><option>Horváth Balázs</option>
-        <option>Geiszler István</option><option>Hüse Stefan</option><option>Sütő Szabolcs</option>
-      </select>
+      <input type="text" id="atvevo" readonly style="background:#eef1f4;color:#555;cursor:not-allowed">
+      <div class="edit-lock-note">A bejelentkezett felhasználó neve — automatikusan kitöltve.</div>
     </div>
   </div>
   <div class="card">
@@ -470,81 +476,46 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </div>
 
-<!-- LEFOGLALÁS RÉSZLETEK (foglalási űrlap) -->
-<div class="page" id="page-lefoglal-detail">
-  <button class="back-btn" onclick="navigate('page-lefoglal-search')"><span class="back-arrow">&#8249;</span> Vissza a kereséshez</button>
-  <div class="section-header" style="background:#7B1FA2"><h2>&#128204; Foglalás megerősítése</h2><p>Adja meg a foglalási adatokat</p></div>
-  <div class="card">
-    <div class="card-title" style="color:#7B1FA2">Lefoglalandó anyag</div>
-    <div id="lefoglal-original-data"></div>
-  </div>
-  <div class="card">
-    <div class="card-title" style="color:#7B1FA2">Foglalási adatok</div>
-    <div class="field">
-      <label>Munkaszám, amire foglal *</label>
-      <input type="text" id="lf_munkaszam_uj" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)">
+<!-- GYORSÁTVÉTEL MODAL -->
+<div class="row-action-modal" id="gyors-modal" onclick="gyorsModalClose(event)">
+  <div class="row-action-card" onclick="event.stopPropagation()">
+    <h3>&#9889; Gyorsátvétel</h3>
+    <div class="detail" id="gyors-sub">A megadott adatok minden kijelölt tételre érvényesek lesznek.</div>
+    <div class="field"><label>Szállítólevél szám *</label><input type="text" id="gy_szallitolevel" placeholder="pl. SL-2026-0441"></div>
+    <div class="field"><label>Tárolási hely</label><select id="gy_tarhely"></select></div>
+    <div class="subsection">Fizikai ellenőrzés</div>
+    <div class="field"><label>Szemrevételezés</label><div class="check-row">
+      <label class="check-opt ok"><input type="radio" name="gy_szemr" value="OK"> OK</label>
+      <label class="check-opt nok"><input type="radio" name="gy_szemr" value="Hiba"> Hiba</label>
+    </div></div>
+    <div class="field"><label>Méretellenőrzés</label><div class="check-row">
+      <label class="check-opt ok"><input type="radio" name="gy_merete" value="OK"> OK</label>
+      <label class="check-opt nok"><input type="radio" name="gy_merete" value="Eltérés"> Eltérés</label>
+    </div></div>
+    <div class="field"><label>Jelölés az anyagon</label><div class="check-row">
+      <label class="check-opt ok"><input type="radio" name="gy_jeloles" value="Megvan"> Megvan</label>
+      <label class="check-opt nok"><input type="radio" name="gy_jeloles" value="Hiányzik"> Hiányzik</label>
+    </div></div>
+    <div class="field"><label>Csomagolás állapota</label><div class="check-row">
+      <label class="check-opt ok"><input type="radio" name="gy_csomagolas" value="OK"> OK</label>
+      <label class="check-opt nok"><input type="radio" name="gy_csomagolas" value="Sérült"> Sérült</label>
+    </div></div>
+    <div class="subsection">Összesített minősítés</div>
+    <div class="min-row">
+      <button class="min-btn" id="gy-btn-megfelelt" onclick="gyMinosit('MEGFELELT')">&#10003; MEGFELELT</button>
+      <button class="min-btn" id="gy-btn-nem" onclick="gyMinosit('NEM FELELT MEG')">&#10007; NEM FELELT MEG</button>
     </div>
-    <div class="field">
-      <label>Lehetséges felhasználási dátum (opcionális)</label>
-      <input type="date" id="lf_datum_uj">
+    <div class="action-buttons" style="margin-top:18px">
+      <button class="btn-action-foglal" style="background:#0380C6" onclick="gyorsAtvetelRogzit()">&#128230; Rögzítés</button>
+      <button class="btn-action-close" onclick="gyorsModalClose()">Mégse</button>
     </div>
-    <div class="field">
-      <label>Megjegyzés (opcionális)</label>
-      <textarea id="lf_megj" placeholder="pl. Csak az első héten lesz szükségünk rá..."></textarea>
+    <div class="spinner" id="gyors-spinner">&#9203; Küldés folyamatban...</div>
+    <div class="result-box" id="gyors-result">
+      <div class="result-label">Generált anyag azonosító(k)</div>
+      <div class="result-avizo" id="gyors-avizo"></div>
+      <div class="result-info" id="gyors-info"></div>
     </div>
-  </div>
-  <button class="btn-lefoglal-exec" onclick="lefoglalVegrehajt()">&#128204; Lefoglalás</button>
-  <div class="spinner" id="lefoglal-spinner">&#9203; Foglalás folyamatban...</div>
-  <div class="result-box" id="lefoglal-result" style="background:#F3E5F5;border-color:#CE93D8">
-    <div class="result-label" style="color:#6A1B9A">Sikeres foglalás</div>
-    <div class="result-avizo">
-      <div class="result-avizo-sor" style="background:#fff;border-color:#CE93D8">
-        <span class="result-avizo-kod" id="lefoglal-avizo" style="color:#6A1B9A"></span>
-      </div>
-    </div>
-    <div class="result-info" id="lefoglal-info"></div>
-  </div>
-  <div class="error-box" id="lefoglal-error"></div>
-</div>
-
-<!-- DOKUMENTUMOK -->
-<div class="page" id="page-dok">
-  <button class="back-btn" onclick="navigate('page-home')"><span class="back-arrow">&#8249;</span> Vissza</button>
-  <div class="section-header" style="background:#00897B"><h2>&#128247; Dokumentumok</h2><p>Szállítólevél / számla feltöltése és keresése</p></div>
-
-  <div class="card">
-    <div class="card-title">Új dokumentum feltöltése</div>
-    <div class="field"><label>Munkaszám</label><input type="text" id="dok_munkaszam" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)"></div>
-    <div class="field"><label>Szállító</label><input type="text" id="dok_szallito" placeholder="pl. Globe Metal"></div>
-    <div class="field"><label>Szállítólevél szám</label><input type="text" id="dok_szallitolevel" placeholder="pl. SL-2026-0441"></div>
-    <div class="field"><label>Dátum</label><input type="date" id="dok_datum"></div>
-    <div class="field"><label>Típus</label>
-      <select id="dok_tipus"><option>szállítólevél</option><option>számla</option><option>egyéb</option></select>
-    </div>
-    <div class="field">
-      <label>Fénykép(ek)</label>
-      <input type="file" id="dok_fajl" accept="image/*" capture="environment" multiple onchange="dokFotoValaszt(this)">
-    </div>
-    <div id="dok-thumbs" class="dok-thumbs"></div>
-    <button class="btn-send" id="dok-feltolt-btn" style="background:#00897B" onclick="dokFeltolt()">&#128228; Feltöltés</button>
-    <div class="spinner" id="dok-spinner">&#9203; Feltöltés folyamatban...</div>
-    <div class="result-box" id="dok-result" style="background:#E0F2F1;border-color:#80CBC4">
-      <div class="result-label" style="color:#00695C" id="dok-result-text"></div>
-    </div>
-    <div class="error-box" id="dok-error"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Keresés a dokumentumok közt</div>
-    <div class="field"><label>Munkaszám</label><input type="text" id="dks_munkaszam" oninput="dokKeres()" placeholder="szűrés..."></div>
-    <div class="field"><label>Szállító</label><input type="text" id="dks_szallito" oninput="dokKeres()" placeholder="szűrés..."></div>
-    <div class="field"><label>Szállítólevél szám</label><input type="text" id="dks_szallitolevel" oninput="dokKeres()" placeholder="szűrés..."></div>
-    <div class="row2">
-      <div class="field"><label>Dátum</label><input type="text" id="dks_datum" oninput="dokKeres()" placeholder="pl. 2026.06"></div>
-      <div class="field"><label>Típus</label><select id="dks_tipus" onchange="dokKeres()"><option value="">összes</option><option>szállítólevél</option><option>számla</option><option>egyéb</option></select></div>
-    </div>
-    <button class="btn-search" style="background:#00897B" onclick="dokBetolt()">&#10227; Lista frissítése</button>
-    <div id="dok-results" style="margin-top:12px"></div>
+    <div class="error-box" id="gyors-error"></div>
   </div>
 </div>
 
@@ -820,6 +791,8 @@ async function keresesAtvetel() {
   const cont = document.getElementById("atvetel-results");
   cont.innerHTML = "<div class='spinner' style='display:block'>&#9203; Keresés...</div>";
   document.getElementById("btn-atvetel-kivalasztott").style.display = "none";
+  const trigReset = document.getElementById("gyors-trigger");
+  if (trigReset) trigReset.style.display = "none";
   keresesTalalatok = [];
   try {
     const res = await api("GET", "/gepszer/atvetel/keres", params);
@@ -860,6 +833,9 @@ function checkboxValtozas() {
   const btn = document.getElementById("btn-atvetel-kivalasztott");
   btn.style.display = kiv.length > 0 ? "block" : "none";
   btn.textContent = "\uD83D\uDCE6 " + kiv.length + " tétel átvétele";
+  // Rejtett gyorsátvétel-gomb a kék sávban — csak kijelölés esetén látszik
+  const trig = document.getElementById("gyors-trigger");
+  if (trig) trig.style.display = kiv.length > 0 ? "flex" : "none";
   keresesTalalatok.forEach((t, idx) => {
     const item = document.getElementById("result-item-" + idx);
     const chk = document.getElementById("chk-" + idx);
@@ -904,6 +880,127 @@ function kivalasztottakAtvetele() {
 }
 
 // ============================================================================
+// GYORSÁTVÉTEL — közös mezők, minden kijelölt tételre alkalmazva
+// (a backend tételenként külön azonosítót generál, mint a normál átvételnél)
+// ============================================================================
+let gyMino = "";
+
+function gyorsAtvetelNyit() {
+  const indexek = getKivalasztottIndexek();
+  if (!indexek.length) { alert("Előbb jelölj ki legalább egy tételt!"); return; }
+  // Tárhely opciók feltöltése
+  document.getElementById("gy_tarhely").innerHTML = tarhelyOptions();
+  // Mezők alaphelyzetbe
+  document.getElementById("gy_szallitolevel").value = "";
+  ["gy_szemr", "gy_merete", "gy_jeloles", "gy_csomagolas"].forEach(name => {
+    document.querySelectorAll("input[name='" + name + "']").forEach(r => {
+      r.checked = false;
+      const opt = r.closest(".check-opt");
+      if (opt) opt.classList.remove("selected-ok", "selected-nok", "selected-warn");
+    });
+  });
+  gyMinosit("MEGFELELT");
+  document.getElementById("gyors-sub").textContent =
+    indexek.length + " kijelölt tétel — a megadott adatok mindegyikre érvényesek lesznek. (Dokumentáció ellenőrzése itt nem kötelező.)";
+  document.getElementById("gyors-result").style.display = "none";
+  document.getElementById("gyors-error").style.display = "none";
+  document.getElementById("gyors-spinner").style.display = "none";
+  document.getElementById("gyors-modal").classList.add("show");
+}
+
+function gyMinosit(e) {
+  gyMino = e;
+  document.getElementById("gy-btn-megfelelt").className = "min-btn" + (e === "MEGFELELT" ? " selected-megfelelt" : "");
+  document.getElementById("gy-btn-nem").className = "min-btn" + (e === "NEM FELELT MEG" ? " selected-nem" : "");
+}
+
+function gyorsModalClose(evt) {
+  if (evt && evt.target.id !== "gyors-modal") return;
+  document.getElementById("gyors-modal").classList.remove("show");
+}
+
+async function gyorsAtvetelRogzit() {
+  document.getElementById("gyors-error").style.display = "none";
+  const indexek = getKivalasztottIndexek();
+  if (!indexek.length) { mutatHiba("Nincs kijelölt tétel!", "gyors-error"); return; }
+  const szlevel = val("gy_szallitolevel");
+  if (!szlevel) { mutatHiba("A szállítólevél szám megadása kötelező!", "gyors-error"); return; }
+  if (!gyMino) { mutatHiba("Válassz összesített minősítést!", "gyors-error"); return; }
+
+  const tarhely = document.getElementById("gy_tarhely").value;
+  const fiz = {
+    szemrevetelez: radioVal("gy_szemr"),
+    meretellenorzes: radioVal("gy_merete"),
+    jeloles_megvan: radioVal("gy_jeloles"),
+    csomagolas: radioVal("gy_csomagolas")
+  };
+  const elso = keresesTalalatok[indexek[0]];
+  const sorok = indexek.map(idx => {
+    const t = keresesTalalatok[idx];
+    return {
+      munkaszam: t.munkaszam || "",
+      anyag_megnevezes: t.anyag || "",
+      anyagminoseg: t.minoseg || "",
+      meret: t.meret || "",
+      adagszam: "",
+      mennyiseg: t.mennyiseg || "",
+      egyseg: t.egyseg || "",
+      netto_egysegar: t.netto_egysegar || "",
+      mubizonylat_tipus: t.mubiz || "",
+      mubizonylat_szam: "",
+      // Dokumentáció ellenőrzése — gyorsátvételnél nem kötelező, üresen marad
+      mubizonylat_megvan: "",
+      megfelelo: "",
+      ce_jeloles: "",
+      // Fizikai ellenőrzés — közös, minden tételre
+      szemrevetelez: fiz.szemrevetelez,
+      meretellenorzes: fiz.meretellenorzes,
+      jeloles_megvan: fiz.jeloles_megvan,
+      csomagolas: fiz.csomagolas,
+      megjegyzes: "",
+      tarolasi_hely: tarhely
+    };
+  });
+  const csomag = {
+    nev: bejelentkezettNev,
+    datum: new Date().toISOString().slice(0, 10),
+    rendeles_szam: elso.rendeles_szam || "",
+    szallito: elso.szallito || "",
+    szallitolevel_szam: szlevel,
+    atvevo: bejelentkezettNev,
+    minosites: gyMino,
+    ncr_szam: "",
+    sorok: sorok
+  };
+
+  document.getElementById("gyors-result").style.display = "none";
+  document.getElementById("gyors-spinner").style.display = "block";
+  try {
+    const res = await api("POST", "/gepszer/atvetel/rogzit", null, csomag);
+    document.getElementById("gyors-spinner").style.display = "none";
+    if (res.ok) {
+      const box = document.getElementById("gyors-avizo");
+      box.innerHTML = "";
+      const lista = Array.isArray(res.avizo) ? res.avizo : [res.avizo];
+      lista.forEach((azon, i) => {
+        const sor = document.createElement("div");
+        sor.className = "result-avizo-sor";
+        sor.innerHTML = "<span class='result-avizo-sorsz'>" + (i + 1) + ".</span><span class='result-avizo-kod'>" + azon + "</span>";
+        box.appendChild(sor);
+      });
+      document.getElementById("gyors-info").textContent =
+        "Rögzítette: " + bejelentkezettNev + " | " + csomag.datum + " | " + sorok.length + " tétel";
+      document.getElementById("gyors-result").style.display = "block";
+    } else {
+      mutatHiba("Hiba: " + (res.hiba || "ismeretlen hiba"), "gyors-error");
+    }
+  } catch (e) {
+    document.getElementById("gyors-spinner").style.display = "none";
+    mutatHiba("Kapcsolódási hiba: " + e.message, "gyors-error");
+  }
+}
+
+// ============================================================================
 // ÁTVÉTEL — ŰRLAP
 // ============================================================================
 function ujAtvetel() {
@@ -913,7 +1010,8 @@ function ujAtvetel() {
   ["rendeles_szam", "szallito", "szallitolevel_szam", "ncr_szam"].forEach(id => {
     const e = document.getElementById(id); if (e) e.value = "";
   });
-  document.getElementById("atvevo").value = "";
+  // Az átvevő mindig a bejelentkezett felhasználó — nem szerkeszthető
+  document.getElementById("atvevo").value = bejelentkezettNev;
   document.getElementById("minosites").value = "";
   document.getElementById("btn-megfelelt").className = "min-btn";
   document.getElementById("btn-nem").className = "min-btn";
@@ -990,6 +1088,8 @@ function minosit(e) {
 // ============================================================================
 async function kuldes() {
   document.getElementById("error").style.display = "none";
+  // Az átvevő mindig a bejelentkezett felhasználó
+  document.getElementById("atvevo").value = bejelentkezettNev;
   const kotelezo = [
     { id: "datum", nev: "Beérkezés dátuma" },
     { id: "szallito", nev: "Szállító neve" },
@@ -1028,7 +1128,7 @@ async function kuldes() {
     rendeles_szam: val("rendeles_szam"),
     szallito: val("szallito"),
     szallitolevel_szam: val("szallitolevel_szam"),
-    atvevo: val("atvevo"),
+    atvevo: bejelentkezettNev,
     minosites: minoSzam,
     ncr_szam: val("ncr_szam"),
     sorok: sorok
