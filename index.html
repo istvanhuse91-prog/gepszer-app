@@ -291,7 +291,7 @@ textarea{resize:vertical;min-height:64px}
   <div class="search-box">
     <div class="search-title">&#128269; Keresés megrendelésben</div>
     <div class="field"><label>Megrendelési szám</label><input type="text" id="s_rendeles" placeholder="pl. 126"></div>
-    <div class="field"><label>Szállító neve</label><input type="text" id="s_szallito" placeholder="pl. Globe Metal"></div>
+    <div class="field"><label>Beszállító cég neve</label><input type="text" id="s_szallito" list="beszallito-lista" autocomplete="off" placeholder="kezdje el írni a cég nevét…"></div>
     <div class="field"><label>Munkaszám</label><input type="text" id="s_munkaszam" placeholder="pl. 31-501-26" oninput="munkaszamFormat(this)"></div>
     <div class="field"><label>Beérkezés dátuma</label><input type="date" id="s_datum"></div>
     <button class="btn-search" onclick="keresesAtvetel()">Keresés indítása</button>
@@ -309,7 +309,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="card-title">Szállítmány fejléce</div>
     <div class="field"><label>Beérkezés dátuma</label><input type="date" id="datum"></div>
     <div class="field"><label>Megrendelési szám</label><input type="text" id="rendeles_szam" placeholder="pl. 126"></div>
-    <div class="field"><label>Szállító neve</label><input type="text" id="szallito" placeholder="pl. Globe Metal"></div>
+    <div class="field"><label>Beszállító cég neve</label><input type="text" id="szallito" list="beszallito-lista" autocomplete="off" placeholder="kezdje el írni a cég nevét…"></div>
     <div class="field"><label>Szállítólevél szám</label><input type="text" id="szallitolevel_szam" placeholder="pl. SL-2026-0441"></div>
     <div class="field"><label>Átvevő neve</label>
       <input type="text" id="atvevo" readonly style="background:#eef1f4;color:#555;cursor:not-allowed">
@@ -520,6 +520,9 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </div>
 
+<!-- BESZÁLLÍTÓK — közös legördülő/keresőlista forrás -->
+<datalist id="beszallito-lista"></datalist>
+
 <script>
 // ============================================================================
 // KONFIGURÁCIÓ
@@ -729,6 +732,9 @@ function navigate(pageId) {
   if (pageId === "page-lefoglal-search") {
     anyagBetolt();
   }
+  if (pageId === "page-atvetel-search" || pageId === "page-atvetel-form") {
+    beszallitokBetolt();
+  }
   if (pageId === "page-dok") {
     const dd = document.getElementById("dok_datum");
     if (dd && !dd.value) dd.value = new Date().toISOString().slice(0, 10);
@@ -776,6 +782,52 @@ function mutatHiba(uzenet, elId) {
 }
 
 // ============================================================================
+// BESZÁLLÍTÓK — datalist (autocomplete) forrás
+// ============================================================================
+let beszallitoKeszlet = new Set();
+let beszallitoBetoltve = false;
+
+function beszallitoDatalistFrissit() {
+  const dl = document.getElementById("beszallito-lista");
+  if (!dl) return;
+  const nevek = Array.from(beszallitoKeszlet)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "hu", { sensitivity: "base" }));
+  dl.innerHTML = nevek
+    .map(n => "<option value=\"" + String(n).replace(/"/g, "&quot;") + "\"></option>")
+    .join("");
+}
+
+function beszallitokHozzaad(nevek) {
+  let valtozott = false;
+  (nevek || []).forEach(n => {
+    const t = String(n == null ? "" : n).trim();
+    if (t && !beszallitoKeszlet.has(t)) { beszallitoKeszlet.add(t); valtozott = true; }
+  });
+  if (valtozott) beszallitoDatalistFrissit();
+}
+
+async function beszallitokBetolt(eroltetett) {
+  if (beszallitoBetoltve && !eroltetett) return;
+  beszallitoBetoltve = true;
+  try {
+    const res = await api("GET", "/gepszer/atvetel/lista");
+    if (res && res.ok && Array.isArray(res.oszlopok) && Array.isArray(res.adatok)) {
+      // A beszállító oszlop megkeresése: tartalmazza, hogy "szállító", de nem "szállítólevél"
+      const oszlop =
+        res.oszlopok.find(c => {
+          const l = String(c).toLowerCase();
+          return (l.includes("szállító") || l.includes("beszállító")) && !l.includes("levél");
+        });
+      if (oszlop) beszallitokHozzaad(res.adatok.map(sor => sor[oszlop]));
+    }
+  } catch (e) {
+    // csendes hiba — ha nem tölt be, a mező sima beviteli mezőként működik tovább
+    beszallitoBetoltve = false;
+  }
+}
+
+// ============================================================================
 // ÁTVÉTEL — KERESÉS
 // ============================================================================
 async function keresesAtvetel() {
@@ -798,12 +850,24 @@ async function keresesAtvetel() {
   try {
     const res = await api("GET", "/gepszer/atvetel/keres", params);
     cont.innerHTML = "";
-    if (!res.ok || !res.adatok || !res.adatok.length) {
+    let adatok = (res.ok && Array.isArray(res.adatok)) ? res.adatok : [];
+    // A találatok beszállítóit hozzáadjuk az autocomplete-listához
+    beszallitokHozzaad(adatok.map(t => t.szallito));
+    // Kliensoldali ÉS-szűrés: minden megadott feltételnek EGYSZERRE kell teljesülnie
+    // (kis/nagybetű érzéketlen, részleges egyezés). Így a 2. (3.) feltétel is szűkít.
+    const illik = (ertek, felt) =>
+      !felt || String(ertek == null ? "" : ertek).toLowerCase().includes(String(felt).toLowerCase());
+    adatok = adatok.filter(t =>
+      illik(t.rendeles_szam, params.rendeles) &&
+      illik(t.szallito,      params.szallito) &&
+      illik(t.munkaszam,     params.munkaszam)
+    );
+    if (!adatok.length) {
       cont.innerHTML = "<div class='card' style='text-align:center;color:#888;padding:20px;font-size:16px;'>Nem található megrendelés.</div>";
       return;
     }
-    keresesTalalatok = res.adatok;
-    res.adatok.forEach((t, idx) => {
+    keresesTalalatok = adatok;
+    adatok.forEach((t, idx) => {
       const div = document.createElement("div");
       div.className = "result-item";
       div.id = "result-item-" + idx;
@@ -1093,7 +1157,7 @@ async function kuldes() {
   document.getElementById("atvevo").value = bejelentkezettNev;
   const kotelezo = [
     { id: "datum", nev: "Beérkezés dátuma" },
-    { id: "szallito", nev: "Szállító neve" },
+    { id: "szallito", nev: "Beszállító cég neve" },
     { id: "szallitolevel_szam", nev: "Szállítólevél szám" },
     { id: "atvevo", nev: "Átvevő neve" }
   ];
