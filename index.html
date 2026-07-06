@@ -450,6 +450,7 @@ textarea{resize:vertical;min-height:64px}
     <button class="anyag-tab active" id="anyagtab-atvetel" onclick="anyagFul('atvetel')">Idegen anyag átvétel</button>
     <button class="anyag-tab" id="anyagtab-maradek" onclick="anyagFul('maradek')">Maradék anyag</button>
     <button class="anyag-tab" id="anyagtab-kivezetett" onclick="anyagFul('kivezetett')">Kivezetett</button>
+    <button class="anyag-tab" id="anyagtab-megrendelt" onclick="anyagFul('megrendelt')">Megrendelt anyagok</button>
   </div>
 
   <div class="tbl-toolbar">
@@ -1464,7 +1465,8 @@ async function kivezetVegrehajt() {
 const ANYAG_LAPOK = {
   atvetel:    { url: "/gepszer/atvetel/lista",    lock: ["Anyag azonosító"] },
   maradek:    { url: "/gepszer/maradek/lista",    lock: ["Azonosító", "Eredeti anyag azonosító"] },
-  kivezetett: { url: "/gepszer/kivezetett/lista", lock: ["Azonosító", "Eredeti anyag azonosító"] }
+  kivezetett: { url: "/gepszer/kivezetett/lista", lock: ["Azonosító", "Eredeti anyag azonosító"] },
+  megrendelt: { url: "/gepszer/megrendeles/lista", lock: [], readonly: true }
 };
 let anyagAktivFul = "atvetel";
 let anyagOszlopok = [];
@@ -1472,7 +1474,7 @@ let anyagAdatok = [];
 
 function anyagFul(ful) {
   anyagAktivFul = ful;
-  ["atvetel", "maradek", "kivezetett"].forEach(f => {
+  ["atvetel", "maradek", "kivezetett", "megrendelt"].forEach(f => {
     const b = document.getElementById("anyagtab-" + f);
     if (b) b.classList.toggle("active", f === ful);
   });
@@ -1567,6 +1569,25 @@ function anyagSorKattint(idx) {
   const sor = anyagAdatok[idx];
   if (!sor) return;
   const cfg = ANYAG_LAPOK[anyagAktivFul];
+
+  // Csak megtekintés (pl. Megrendelt anyagok — a beszerzés tükre, nem szerkeszthető)
+  if (cfg.readonly) {
+    const cim = sor["Anyag azonosító"] || sor["Azonosító"] || sor["Munkaszám"] || "";
+    document.getElementById("row-action-title").textContent =
+      "Tétel részletei" + (cim ? " — " + cim : "");
+    let ro = "";
+    anyagOszlopok.forEach(c => {
+      const ertek = (sor[c] === undefined || sor[c] === null) ? "" : String(sor[c]);
+      const safe = ertek.replace(/"/g, "&quot;");
+      ro += "<div class='edit-field'><label>" + c + "</label><input type='text' class='locked' value=\"" + safe + "\" readonly></div>";
+    });
+    document.getElementById("row-action-detail").innerHTML = ro;
+    document.getElementById("row-action-buttons").innerHTML =
+      "<button class='btn-action-close' onclick='rowActionClose()'>Bezár</button>";
+    document.getElementById("row-action-modal").classList.add("show");
+    return;
+  }
+
   const azonosito = sor["Anyag azonosító"] || sor["Azonosító"] || "—";
   document.getElementById("row-action-title").textContent = "Tétel szerkesztése — " + azonosito;
 
