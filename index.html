@@ -66,6 +66,13 @@ textarea{resize:vertical;min-height:64px}
 .result-item-body p{font-size:15px;color:#555;line-height:1.6}
 .result-badge{display:inline-block;background:#e8f3fb;color:#0380C6;font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;margin-bottom:8px}
 .result-badge-maradek{display:inline-block;background:#fff3e0;color:#e65100;font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;margin-bottom:8px;margin-left:6px}
+.result-item.atveve-ok{border-color:#4caf50;background:#f1f9f1;opacity:.9}
+.result-item.atveve-nok{border-color:#e53935;background:#fdf2f2;opacity:.9}
+.badge-atveve{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:10px;margin-bottom:8px;margin-left:6px;letter-spacing:.3px}
+.badge-atveve-ok{background:#e6f4ea;color:#1e7e34}
+.badge-atveve-nok{background:#fdecea;color:#c62828}
+.atvetel-toggle{display:none;align-items:center;gap:9px;font-size:14px;color:#555;background:#fff;border:1px solid #e0e8f0;border-radius:8px;padding:10px 12px;margin-bottom:10px;cursor:pointer;user-select:none}
+.atvetel-toggle input{width:18px;height:18px;accent-color:#0380C6;cursor:pointer;flex-shrink:0}
 .btn-atvetel-kivalasztott{width:100%;padding:16px;font-size:18px;font-weight:700;border-radius:12px;border:none;background:#0380C6;color:#fff;cursor:pointer;margin-top:8px;display:none}
 .btn-atvetel-kivalasztott:active{background:#0268a8}
 .check-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
@@ -831,6 +838,46 @@ async function beszallitokBetolt(eroltetett) {
 // ============================================================================
 // ÁTVÉTEL — KERESÉS
 // ============================================================================
+// ----------------------------------------------------------------------------
+// Már átvett tételek felismerése az IDEGEN ANYAG ÁTVÉTEL lap alapján.
+// A megrendelési szám az átvételi lapon nincs, ezért összetett kulcsra
+// párosítunk: munkaszám + beszállító + anyag + anyagminőség + méret + mennyiség.
+// Egy tétel akkor "átvett", ha van hozzá már rögzített (kitöltött "Rögzítés
+// időpontja") átvételi sor. A mennyiség is a kulcs része, így a részleges
+// átvételek (rendelt 10, érkezett 6) NEM tűnnek el — biztonságosan látszanak.
+// ----------------------------------------------------------------------------
+function atvetelKulcs(munkaszam, szallito, anyag, minoseg, meret, mennyiseg) {
+  const n = v => String(v == null ? "" : v).trim().toLowerCase();
+  const q = v => {
+    const szam = parseFloat(String(v == null ? "" : v).replace(",", "."));
+    return isNaN(szam) ? n(v) : String(szam);
+  };
+  return [n(munkaszam), n(szallito), n(anyag), n(minoseg), n(meret), q(mennyiseg)].join("\u00A6");
+}
+
+async function atvettMultihalmazBetolt() {
+  // Map: kulcs -> már rögzített átvételi sorok tömbje (minősítéssel).
+  const map = new Map();
+  try {
+    const res = await api("GET", "/gepszer/atvetel/lista");
+    if (!res || !res.ok || !Array.isArray(res.adatok)) return map;
+    res.adatok.forEach(sor => {
+      const rogzitve = sor["Rögzítés időpontja"];
+      if (rogzitve == null || String(rogzitve).trim() === "") return; // csak rögzített átvétel
+      const kulcs = atvetelKulcs(
+        sor["Munkaszám"], sor["Szállító"], sor["Anyag megnevezése"],
+        sor["Anyagminőség"], sor["Méret"], sor["Mennyiség"]
+      );
+      const minosites = String(sor["Minősítés"] == null ? "" : sor["Minősítés"]).trim().toUpperCase();
+      if (!map.has(kulcs)) map.set(kulcs, []);
+      map.get(kulcs).push({ minosites });
+    });
+  } catch (e) {
+    // Ha nem tölt be, egyszerűen nem jelölünk semmit átvettként.
+  }
+  return map;
+}
+
 async function keresesAtvetel() {
   const params = {
     rendeles: val("s_rendeles"),
@@ -849,7 +896,11 @@ async function keresesAtvetel() {
   if (trigReset) trigReset.style.display = "none";
   keresesTalalatok = [];
   try {
-    const res = await api("GET", "/gepszer/atvetel/keres", params);
+    // A keresést és a már átvett tételek listáját párhuzamosan kérjük le.
+    const [res, atvettMap] = await Promise.all([
+      api("GET", "/gepszer/atvetel/keres", params),
+      atvettMultihalmazBetolt()
+    ]);
     cont.innerHTML = "";
     let adatok = (res.ok && Array.isArray(res.adatok)) ? res.adatok : [];
     // A találatok beszállítóit hozzáadjuk az autocomplete-listához
@@ -867,31 +918,90 @@ async function keresesAtvetel() {
       cont.innerHTML = "<div class='card' style='text-align:center;color:#888;padding:20px;font-size:16px;'>Nem található megrendelés.</div>";
       return;
     }
+    // Minden találatnál megjelöljük, hogy át van-e már véve. Egy átvételi sor
+    // csak egyszer "használódik el" (kivesszük a tömbből), így ha egy anyagból
+    // több sor van rendelve, csak annyi jelölődik átvettként, amennyit bevettek.
+    adatok.forEach(t => {
+      const kulcs = atvetelKulcs(t.munkaszam, t.szallito, t.anyag, t.minoseg, t.meret, t.mennyiseg);
+      const sorok = atvettMap.get(kulcs);
+      if (sorok && sorok.length) {
+        const talalt = sorok.shift();
+        t._atveve = true;
+        t._atveveNok = (talalt.minosites === "NEM FELELT MEG");
+      } else {
+        t._atveve = false;
+        t._atveveNok = false;
+      }
+    });
     keresesTalalatok = adatok;
-    adatok.forEach((t, idx) => {
+
+    // Elrejtő kapcsoló — csak akkor jelenik meg, ha van már átvett tétel.
+    const atvettSzam = adatok.filter(t => t._atveve).length;
+    if (atvettSzam > 0) {
+      const toggle = document.createElement("label");
+      toggle.className = "atvetel-toggle";
+      toggle.style.display = "flex";
+      toggle.innerHTML =
+        "<input type='checkbox' id='atvetel-rejt' onchange='atvetelRejtValtozas()'>" +
+        "<span>Átvett tételek elrejtése (" + atvettSzam + " db)</span>";
+      cont.appendChild(toggle);
+    }
+
+    // Előbb a még nyitott (nem átvett) tételek, utána az átvettek — a teendő
+    // tételek mindig felül. Az eredeti index (idx) végig megmarad a checkbox-
+    // és kijelölés-logika miatt.
+    const sorrend = adatok
+      .map((t, idx) => ({ t, idx }))
+      .sort((a, b) => (a.t._atveve === b.t._atveve) ? 0 : (a.t._atveve ? 1 : -1));
+
+    sorrend.forEach(({ t, idx }) => {
       const div = document.createElement("div");
-      div.className = "result-item";
+      div.className = "result-item" + (t._atveve ? (t._atveveNok ? " atveve-nok" : " atveve-ok") : "");
       div.id = "result-item-" + idx;
+      div.dataset.atveve = t._atveve ? "1" : "0";
+
+      // Már átvett tétel: nincs checkbox (nem lehet véletlenül újra bevenni).
+      const checkResz = t._atveve
+        ? "<div class='result-item-check' style='width:24px'></div>"
+        : "<div class='result-item-check'><input type='checkbox' id='chk-" + idx + "' onchange='checkboxValtozas()'></div>";
+
+      const atveveBadge = t._atveve
+        ? (t._atveveNok
+            ? "<span class='badge-atveve badge-atveve-nok'>&#10007; Átvéve — nem felelt meg</span>"
+            : "<span class='badge-atveve badge-atveve-ok'>&#10003; Átvéve</span>")
+        : "";
+
       div.innerHTML =
-        "<div class='result-item-check'><input type='checkbox' id='chk-" + idx + "' onchange='checkboxValtozas()'></div>" +
+        checkResz +
         "<div class='result-item-body'>" +
-        "<div class='result-badge'>" + (t.rendeles_szam || "—") + "</div>" +
+        "<div class='result-badge'>" + (t.rendeles_szam || "—") + "</div>" + atveveBadge +
         "<h4>" + (t.szallito || "—") + "</h4>" +
         "<p>Munkaszám: <strong>" + (t.munkaszam || "—") + "</strong></p>" +
         "<p>Anyag: " + (t.anyag || "—") + " | " + (t.minoseg || "") + "</p>" +
         "<p>Méret: " + (t.meret || "—") + " | " + (t.mennyiseg || "") + " " + (t.egyseg || "") + "</p>" +
         "<p>Várható: " + (t.datum || "—") + "</p>" +
         "</div>";
-      div.querySelector("div.result-item-body").onclick = () => {
-        const chk = document.getElementById("chk-" + idx);
-        chk.checked = !chk.checked;
-        checkboxValtozas();
-      };
+
+      if (!t._atveve) {
+        div.querySelector("div.result-item-body").onclick = () => {
+          const chk = document.getElementById("chk-" + idx);
+          chk.checked = !chk.checked;
+          checkboxValtozas();
+        };
+      }
       cont.appendChild(div);
     });
   } catch (e) {
     cont.innerHTML = "<div class='error-box' style='display:block'>Kapcsolódási hiba: " + e.message + "</div>";
   }
+}
+
+function atvetelRejtValtozas() {
+  const rejt = document.getElementById("atvetel-rejt");
+  const rejtve = rejt && rejt.checked;
+  document.querySelectorAll("#atvetel-results .result-item").forEach(el => {
+    if (el.dataset.atveve === "1") el.style.display = rejtve ? "none" : "flex";
+  });
 }
 
 function checkboxValtozas() {
@@ -1497,6 +1607,10 @@ async function anyagBetolt() {
     }
     anyagOszlopok = res.oszlopok || [];
     anyagAdatok = res.adatok || [];
+    // A Megrendelt anyagok fül a beszerzés tükre: a lap alján vannak a
+    // legfrissebb megrendelések, ezért fordított sorrendben mutatjuk
+    // (legújabb elöl), így a legutóbb megrendelt tételek látszanak elsőként.
+    if (anyagAktivFul === "megrendelt") anyagAdatok.reverse();
     anyagFejlec();
     anyagRender(anyagAdatok);
   } catch (e) {
